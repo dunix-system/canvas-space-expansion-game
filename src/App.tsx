@@ -1,5 +1,7 @@
+import CanvasComponent from "./components/features/Canvas";
+
 function App() {
-  return <></>;
+  return <CanvasComponent />;
 }
 
 export default App;
