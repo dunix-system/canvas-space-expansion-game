@@ -7,7 +7,7 @@ const CIRCLE_COLOR = "#ffffff";
 const CIRCLE_RADIUS = 50;
 const CIRCLE_GAP = 100;
 
-const CanvasComponent = ({ className }: { className?: string }) => {
+const CanvasComponent = () => {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
 
   useEffect(() => {
