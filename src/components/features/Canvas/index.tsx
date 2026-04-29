@@ -21,7 +21,6 @@ const CanvasComponent = ({ className }: { className?: string }) => {
       const ctx = canvas.getContext("2d");
       if (!ctx) return;
 
-      // ✅ Fill background
       ctx.fillStyle = CANVAS_COLOR_BG;
       ctx.fillRect(0, 0, canvas.width, canvas.height);
       const circleSpace = CIRCLE_RADIUS + CIRCLE_GAP;
@@ -45,11 +44,6 @@ const CanvasComponent = ({ className }: { className?: string }) => {
           ctx.fill();
         }
       }
-
-      // ctx.fillStyle = CIRCLE_COLOR;
-      // ctx.beginPath();
-      // ctx.arc(CIRCLE_X, CIRCLE_Y, CIRCLE_RADIUS, 0, 2 * Math.PI);
-      // ctx.fill();
     };
 
     draw();
