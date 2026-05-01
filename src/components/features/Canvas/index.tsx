@@ -4,8 +4,8 @@ import { useRef, useEffect } from "react";
 const CANVAS_COLOR_BG = "#2c2c2c";
 const CIRCLE_COLOR = "#ffffff";
 
-const CIRCLE_RADIUS = 50;
-const CIRCLE_GAP = 100;
+const CIRCLE_RAD = 20;
+const CIRCLE_GAP = 30;
 
 const CanvasComponent = () => {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
@@ -23,21 +23,21 @@ const CanvasComponent = () => {
 
       ctx.fillStyle = CANVAS_COLOR_BG;
       ctx.fillRect(0, 0, canvas.width, canvas.height);
-      const circleSpace = CIRCLE_RADIUS + CIRCLE_GAP;
 
-      const cols = Math.floor((canvas.width - CIRCLE_GAP) / circleSpace);
-      const rows = Math.floor((canvas.height - CIRCLE_GAP) / circleSpace);
+      const circleDiam = CIRCLE_RAD * 2;
+      const circleExt = circleDiam + CIRCLE_GAP;
 
-      console.log(cols);
-      console.log(rows);
-      for (let currRow = 1; currRow <= rows + 1; currRow += 1) {
-        for (let currCol = 1; currCol <= cols + 1; currCol += 1) {
+      const cols = Math.floor((canvas.width + CIRCLE_GAP) / circleExt);
+      const rows = Math.floor((canvas.height + CIRCLE_GAP) / circleExt);
+
+      for (let rowNum = 0; rowNum <= rows; rowNum += 1) {
+        for (let colNum = 0; colNum <= cols; colNum += 1) {
           ctx.fillStyle = CIRCLE_COLOR;
           ctx.beginPath();
           ctx.arc(
-            circleSpace * currCol - CIRCLE_GAP,
-            circleSpace * currRow - CIRCLE_GAP,
-            CIRCLE_RADIUS,
+            circleExt * colNum + CIRCLE_RAD,
+            circleExt * rowNum + CIRCLE_RAD,
+            CIRCLE_RAD,
             0,
             2 * Math.PI,
           );
@@ -50,7 +50,7 @@ const CanvasComponent = () => {
 
     window.addEventListener("resize", draw);
     return () => window.removeEventListener("resize", draw);
-  }, [CIRCLE_GAP, CIRCLE_RADIUS, CIRCLE_COLOR, CANVAS_COLOR_BG]);
+  }, [CIRCLE_GAP, CIRCLE_RAD, CIRCLE_COLOR, CANVAS_COLOR_BG]);
 
   return <canvas ref={canvasRef} className={clsx("h-full w-full")} />;
 };
