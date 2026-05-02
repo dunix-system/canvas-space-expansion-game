@@ -1,5 +1,5 @@
 import clsx from "clsx";
-import { useRef, useEffect, useCallback } from "react";
+import { useRef, useEffect } from "react";
 
 const CANVAS_COLOR_BG = "#2c2c2c";
 const CIRCLE_COLOR = "#ffffff";
@@ -11,8 +11,6 @@ const CanvasComponent = () => {
   const defCanvasCoordsRef = useRef<{ x: number; y: number }>({ x: 0, y: 0 });
   const defMouseCoordsRef = useRef<{ x: number; y: number }>({ x: 0, y: 0 });
   const mouseOffsetRef = useRef<{ x: number; y: number }>({ x: 0, y: 0 });
-  const isDraggableRef = useRef<boolean>(false);
-  const rafRef = useRef<number>(0);
 
   const setMouseCoords = (event: MouseEvent) => {
     const x = event?.pageX;
@@ -21,45 +19,30 @@ const CanvasComponent = () => {
     defMouseCoordsRef.current = { x, y };
   };
 
-  const setCanvasCoords = () => {
-    console.log({ "mouseOffsetRef?.current?.x": mouseOffsetRef?.current?.x });
-    console.log({ "mouseOffsetRef?.current?.y": mouseOffsetRef?.current?.y });
-    console.log({ "defCanvasCoordsRef?.current?.x": defCanvasCoordsRef?.current?.x });
-    console.log({ "defCanvasCoordsRef?.current?.y": defCanvasCoordsRef?.current?.y });
-    if (
-      mouseOffsetRef?.current?.x === defCanvasCoordsRef?.current?.x &&
-      mouseOffsetRef?.current?.y === defCanvasCoordsRef?.current?.y
-    ) {
-      return;
-    }
-    const x = mouseOffsetRef?.current?.x;
-    const y = mouseOffsetRef?.current?.y;
-
-    defCanvasCoordsRef.current = { x, y };
-  };
-
-  const onMouseMove = (event: MouseEvent) => {
-    rafRef.current = requestAnimationFrame(() => {
-      calculateMouseOffset(event);
-    });
-  };
-
   const calculateMouseOffset = (event: MouseEvent) => {
     const currX = event?.pageX;
     const currY = event?.pageY;
 
-    const x = defMouseCoordsRef?.current?.x + defCanvasCoordsRef?.current?.x - currX;
-    const y = defMouseCoordsRef?.current?.y + defCanvasCoordsRef?.current?.y - currY;
+    const x = defMouseCoordsRef?.current?.x - currX;
+    const y = defMouseCoordsRef?.current?.y - currY;
     mouseOffsetRef.current = { x, y };
-    cancelAnimationFrame(rafRef.current);
-    rafRef.current = requestAnimationFrame(draw);
+
+    requestAnimationFrame(draw);
   };
 
-  // const resetMouseOffset = () => {
-  //   mouseOffsetRef.current = { x: 0, y: 0 };
-  // };
+  const resetMouseOffset = () => {
+    mouseOffsetRef.current = { x: 0, y: 0 };
+  };
 
-  const draw = useCallback(() => {
+  const setCanvasCoords = () => {
+    const x = defCanvasCoordsRef?.current?.x + mouseOffsetRef?.current?.x;
+    const y = defCanvasCoordsRef?.current?.y + mouseOffsetRef?.current?.y;
+
+    defCanvasCoordsRef.current = { x, y };
+    resetMouseOffset();
+  };
+
+  const draw = () => {
     const canvas = canvasRef.current;
     if (!canvas) return;
 
@@ -70,13 +53,10 @@ const CanvasComponent = () => {
 
     if (!ctx) return;
 
-    if (isDraggableRef?.current && mouseOffsetRef?.current) {
-      const x = mouseOffsetRef?.current?.x;
-      const y = mouseOffsetRef?.current?.y;
+    const x = mouseOffsetRef?.current?.x + defCanvasCoordsRef?.current?.x;
+    const y = mouseOffsetRef?.current?.y + defCanvasCoordsRef?.current?.y;
 
-      ctx.resetTransform();
-      ctx.translate(x, y);
-    }
+    ctx.translate(x, y);
 
     ctx.fillStyle = CANVAS_COLOR_BG;
     ctx.fillRect(0, 0, canvas.width, canvas.height);
@@ -95,24 +75,35 @@ const CanvasComponent = () => {
         ctx.fill();
       }
     }
-  }, [defCanvasCoordsRef?.current, defMouseCoordsRef?.current, mouseOffsetRef.current]);
+  };
+
+  const onMouseDown = (event: MouseEvent) => {
+    setMouseCoords(event);
+    canvasRef?.current?.addEventListener("mousemove", onMouseMove);
+  };
+
+  const onMouseMove = (event: MouseEvent) => {
+    calculateMouseOffset(event);
+  };
+
+  const onMouseUp = (event: MouseEvent) => {
+    canvasRef?.current?.removeEventListener("mousemove", onMouseMove);
+    calculateMouseOffset(event);
+    setCanvasCoords();
+  };
 
   useEffect(() => {
     draw();
     window.addEventListener("resize", draw);
-    window.addEventListener("mousedown", (event: MouseEvent) => {
-      isDraggableRef.current = true;
-      setMouseCoords(event);
-      window.addEventListener("mousemove", onMouseMove);
-    });
-    window.addEventListener("mouseup", () => {
-      // window.addEventListener("mouseup", (event: MouseEvent) => {
-      isDraggableRef.current = false;
-      setCanvasCoords();
-      window.removeEventListener("mousemove", onMouseMove);
-    });
+    canvasRef?.current?.addEventListener("mousedown", onMouseDown);
+    canvasRef?.current?.addEventListener("mouseup", onMouseUp);
 
-    return () => window.removeEventListener("resize", draw);
+    return () => {
+      window.removeEventListener("resize", draw);
+      canvasRef?.current?.removeEventListener("mousedown", onMouseDown);
+      canvasRef?.current?.removeEventListener("mousemove", onMouseMove);
+      canvasRef?.current?.removeEventListener("mouseup", onMouseUp);
+    };
   }, [draw]);
 
   return <canvas ref={canvasRef} className={clsx("h-full w-full")} />;
