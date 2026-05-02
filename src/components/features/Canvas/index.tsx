@@ -1,58 +1,136 @@
 import clsx from "clsx";
 import { useRef, useEffect } from "react";
 
-const CANVAS_COLOR_BG = "#2c2c2c";
+const CANVAS_COLOR_BG = "#000";
 const CIRCLE_COLOR = "#ffffff";
+// const circleRad = 40;
+// const circleGap = 30;
 
-const CIRCLE_RADIUS = 50;
-const CIRCLE_GAP = 100;
+interface CanvasComponentProps {
+  circleRad: number;
+  circleGap: number;
+}
 
-const CanvasComponent = () => {
+const CanvasComponent: React.FC<CanvasComponentProps> = ({ circleGap, circleRad }) => {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
+  const defCanvasCoordsRef = useRef<{ x: number; y: number }>({ x: 0, y: 0 });
+  const defMouseCoordsRef = useRef<{ x: number; y: number }>({ x: 0, y: 0 });
+  const mouseOffsetRef = useRef<{ x: number; y: number }>({ x: 0, y: 0 });
 
-  useEffect(() => {
+  const setMouseCoords = (event: PointerEvent) => {
+    defMouseCoordsRef.current = { x: event.pageX, y: event.pageY };
+  };
+
+  const calculateMouseOffset = (event: PointerEvent) => {
+    const x = defMouseCoordsRef.current.x - event.pageX;
+    const y = defMouseCoordsRef.current.y - event.pageY;
+    mouseOffsetRef.current = { x, y };
+
+    requestAnimationFrame(draw);
+  };
+
+  const resetMouseOffset = () => {
+    mouseOffsetRef.current = { x: 0, y: 0 };
+  };
+
+  const setCanvasCoords = () => {
+    const x = defCanvasCoordsRef.current.x + mouseOffsetRef.current.x;
+    const y = defCanvasCoordsRef.current.y + mouseOffsetRef.current.y;
+
+    defCanvasCoordsRef.current = { x, y };
+    resetMouseOffset();
+  };
+
+  const draw = () => {
     const canvas = canvasRef.current;
     if (!canvas) return;
 
-    const draw = () => {
-      canvas.width = canvas.offsetWidth;
-      canvas.height = canvas.offsetHeight;
+    canvas.width = canvas.offsetWidth;
+    canvas.height = canvas.offsetHeight;
 
-      const ctx = canvas.getContext("2d");
-      if (!ctx) return;
+    const ctx = canvas.getContext("2d");
+    if (!ctx) return;
 
-      ctx.fillStyle = CANVAS_COLOR_BG;
-      ctx.fillRect(0, 0, canvas.width, canvas.height);
-      const circleSpace = CIRCLE_RADIUS + CIRCLE_GAP;
+    const x = mouseOffsetRef.current.x + defCanvasCoordsRef.current.x;
+    const y = mouseOffsetRef.current.y + defCanvasCoordsRef.current.y;
 
-      const cols = Math.floor((canvas.width - CIRCLE_GAP) / circleSpace);
-      const rows = Math.floor((canvas.height - CIRCLE_GAP) / circleSpace);
+    ctx.fillStyle = CANVAS_COLOR_BG;
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-      console.log(cols);
-      console.log(rows);
-      for (let currRow = 1; currRow <= rows + 1; currRow += 1) {
-        for (let currCol = 1; currCol <= cols + 1; currCol += 1) {
-          ctx.fillStyle = CIRCLE_COLOR;
-          ctx.beginPath();
-          ctx.arc(
-            circleSpace * currCol - CIRCLE_GAP,
-            circleSpace * currRow - CIRCLE_GAP,
-            CIRCLE_RADIUS,
-            0,
-            2 * Math.PI,
-          );
-          ctx.fill();
-        }
+    ctx.translate(x, y);
+
+    const circleDiam = circleRad * 2;
+    const circleExt = circleDiam + circleGap;
+
+    const cols = Math.floor((canvas.width + circleGap) / circleExt);
+    const rows = Math.floor((canvas.height + circleGap) / circleExt);
+
+    const startCol = Math.floor(-x / circleExt) - 1;
+    const startRow = Math.floor(-y / circleExt) - 1;
+    const endCol = startCol + cols + 2;
+    const endRow = startRow + rows + 2;
+
+    for (let rowNum = startRow; rowNum <= endRow; rowNum += 1) {
+      for (let colNum = startCol; colNum <= endCol; colNum += 1) {
+        ctx.fillStyle = CIRCLE_COLOR;
+        ctx.beginPath();
+        ctx.arc(circleExt * colNum + circleRad, circleExt * rowNum + circleRad, circleRad, 0, 2 * Math.PI);
+        ctx.fill();
+      }
+    }
+  };
+
+  const onPointerDown = (event: PointerEvent) => {
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+
+    canvas.setPointerCapture(event.pointerId);
+
+    setMouseCoords(event);
+    canvas.addEventListener("pointermove", onPointerMove);
+    canvas.addEventListener("pointerup", onPointerUp);
+    canvas.addEventListener("pointercancel", onPointerUp); // Catch edge cases where the browser forcibly stops the drag
+  };
+
+  const onPointerMove = (event: PointerEvent) => {
+    calculateMouseOffset(event);
+  };
+
+  const onPointerUp = (event: PointerEvent) => {
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+
+    canvas.releasePointerCapture(event.pointerId);
+
+    canvas.removeEventListener("pointermove", onPointerMove);
+    canvas.removeEventListener("pointerup", onPointerUp);
+    canvas.removeEventListener("pointercancel", onPointerUp);
+
+    calculateMouseOffset(event);
+    setCanvasCoords();
+  };
+
+  useEffect(() => {
+    draw();
+    window.addEventListener("resize", draw);
+
+    const canvas = canvasRef.current;
+    if (canvas) {
+      canvas.addEventListener("pointerdown", onPointerDown);
+    }
+
+    return () => {
+      window.removeEventListener("resize", draw);
+      if (canvas) {
+        canvas.removeEventListener("pointerdown", onPointerDown);
+        canvas.removeEventListener("pointermove", onPointerMove);
+        canvas.removeEventListener("pointerup", onPointerUp);
+        canvas.removeEventListener("pointercancel", onPointerUp);
       }
     };
+  }, [circleRad, circleGap]);
 
-    draw();
-
-    window.addEventListener("resize", draw);
-    return () => window.removeEventListener("resize", draw);
-  }, [CIRCLE_GAP, CIRCLE_RADIUS, CIRCLE_COLOR, CANVAS_COLOR_BG]);
-
-  return <canvas ref={canvasRef} className={clsx("h-full w-full")} />;
+  return <canvas ref={canvasRef} className={clsx("h-full w-full touch-none")} />;
 };
 
 export default CanvasComponent;
