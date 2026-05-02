@@ -3,10 +3,15 @@ import { useRef, useEffect } from "react";
 
 const CANVAS_COLOR_BG = "#000";
 const CIRCLE_COLOR = "#ffffff";
-const CIRCLE_RAD = 40;
-const CIRCLE_GAP = 30;
+// const circleRad = 40;
+// const circleGap = 30;
 
-const CanvasComponent = () => {
+interface CanvasComponentProps {
+  circleRad: number;
+  circleGap: number;
+}
+
+const CanvasComponent: React.FC<CanvasComponentProps> = ({ circleGap, circleRad }) => {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const defCanvasCoordsRef = useRef<{ x: number; y: number }>({ x: 0, y: 0 });
   const defMouseCoordsRef = useRef<{ x: number; y: number }>({ x: 0, y: 0 });
@@ -54,11 +59,11 @@ const CanvasComponent = () => {
 
     ctx.translate(x, y);
 
-    const circleDiam = CIRCLE_RAD * 2;
-    const circleExt = circleDiam + CIRCLE_GAP;
+    const circleDiam = circleRad * 2;
+    const circleExt = circleDiam + circleGap;
 
-    const cols = Math.floor((canvas.width + CIRCLE_GAP) / circleExt);
-    const rows = Math.floor((canvas.height + CIRCLE_GAP) / circleExt);
+    const cols = Math.floor((canvas.width + circleGap) / circleExt);
+    const rows = Math.floor((canvas.height + circleGap) / circleExt);
 
     const startCol = Math.floor(-x / circleExt) - 1;
     const startRow = Math.floor(-y / circleExt) - 1;
@@ -69,7 +74,7 @@ const CanvasComponent = () => {
       for (let colNum = startCol; colNum <= endCol; colNum += 1) {
         ctx.fillStyle = CIRCLE_COLOR;
         ctx.beginPath();
-        ctx.arc(circleExt * colNum + CIRCLE_RAD, circleExt * rowNum + CIRCLE_RAD, CIRCLE_RAD, 0, 2 * Math.PI);
+        ctx.arc(circleExt * colNum + circleRad, circleExt * rowNum + circleRad, circleRad, 0, 2 * Math.PI);
         ctx.fill();
       }
     }
@@ -123,7 +128,7 @@ const CanvasComponent = () => {
         canvas.removeEventListener("pointercancel", onPointerUp);
       }
     };
-  }, []);
+  }, [circleRad, circleGap]);
 
   return <canvas ref={canvasRef} className={clsx("h-full w-full touch-none")} />;
 };
