@@ -7,7 +7,7 @@ interface EffectsPanelProps {
 
 export const EffectsPanel = ({ onClose }: EffectsPanelProps) => {
   return (
-    <div className="bg-sidebar border-sidebar-border pointer-events-auto flex h-fit max-h-full w-80 flex-col border-r shadow-xl">
+    <div className="bg-sidebar border-sidebar-border pointer-events-auto m-2 mt-3 flex h-fit max-h-full w-90 flex-col border-r shadow-xl">
       <div className="border-sidebar-border flex items-center justify-between border-b p-4">
         <h2 className="text-sidebar-foreground text-lg font-semibold tracking-tight">Effects</h2>
         <Button variant="secondary" size="icon-sm" onClick={onClose} className="text-sidebar-foreground/70">

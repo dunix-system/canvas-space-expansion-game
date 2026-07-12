@@ -9,7 +9,7 @@ export type ActivePanel = "properties" | "effects" | null;
 
 function App() {
   const [circleRad, setCircleRad] = useState(40);
-  const [circleGap, setCircleGap] = useState(30);
+  const [circleGap, setCircleGap] = useState(0);
   const [activePanel, setActivePanel] = useState<ActivePanel>(null);
 
   return (
