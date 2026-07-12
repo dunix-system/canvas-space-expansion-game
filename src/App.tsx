@@ -13,31 +13,26 @@ function App() {
   const [activePanel, setActivePanel] = useState<ActivePanel>(null);
 
   return (
-    <div className="relative h-screen w-screen overflow-hidden bg-background">
-      {/* Canvas Layer - absolute behind everything */}
+    <div className="bg-background relative h-screen w-screen overflow-hidden">
       <div className="absolute inset-0 z-0">
         <CanvasComponent circleRad={circleRad} circleGap={circleGap} />
       </div>
 
-      {/* UI Layer */}
       <SidebarProvider className="pointer-events-none absolute inset-0 z-10 flex w-full">
         <div className="pointer-events-auto flex h-full">
           <AppSidebar activePanel={activePanel} setActivePanel={setActivePanel} />
-          
-          {/* Sliding Panels */}
-          {activePanel === 'properties' && (
-            <PropertiesPanel 
-              circleRad={circleRad} 
-              setCircleRad={setCircleRad} 
-              circleGap={circleGap} 
+
+          {activePanel === "properties" && (
+            <PropertiesPanel
+              circleRad={circleRad}
+              setCircleRad={setCircleRad}
+              circleGap={circleGap}
               setCircleGap={setCircleGap}
               onClose={() => setActivePanel(null)}
             />
           )}
-          
-          {activePanel === 'effects' && (
-            <EffectsPanel onClose={() => setActivePanel(null)} />
-          )}
+
+          {activePanel === "effects" && <EffectsPanel onClose={() => setActivePanel(null)} />}
         </div>
       </SidebarProvider>
     </div>
