@@ -24,7 +24,7 @@ export const PropertiesPanel = ({
     <div className="bg-sidebar border-sidebar-border pointer-events-auto m-2 mt-3 flex h-fit max-h-full w-90 flex-col border-r shadow-xl">
       <div className="border-sidebar-border flex items-center justify-between border-b p-4">
         <h2 className="text-sidebar-foreground text-lg font-semibold tracking-tight">Properties</h2>
-        <Button variant="ghost" size="icon-sm" onClick={onClose} className="text-sidebar-foreground/70">
+        <Button variant="secondary" size="icon-sm" onClick={onClose} className="text-sidebar-foreground/70">
           <X size={20} />
         </Button>
       </div>
@@ -65,7 +65,7 @@ export const PropertiesPanel = ({
               />
             </div>
             <div className="relative">
-              <div className="bg-muted pointer-events-none absolute top-1/2 left-1/2 h-[20px] w-[6px] -translate-x-1/2 -translate-y-1/2" />
+              <div className="bg-muted pointer-events-none absolute top-1/2 left-1/2 h-[20px] w-[4px] -translate-x-1/2 -translate-y-1/2" />
 
               <Slider
                 value={[circleGap]}
