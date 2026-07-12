@@ -1,27 +1,46 @@
 import { useState } from "react";
 import CanvasComponent from "./components/features/Canvas";
-import { ControlPanel } from "./components/features/ControlPanel";
 import { AppSidebar } from "./components/features/AppSidebar";
-import { SidebarProvider, SidebarTrigger } from "./components/ui/sidebar";
+import { SidebarProvider } from "./components/ui/sidebar";
+import { PropertiesPanel } from "./components/features/PropertiesPanel";
+import { EffectsPanel } from "./components/features/EffectsPanel";
+
+export type ActivePanel = "properties" | "effects" | null;
 
 function App() {
   const [circleRad, setCircleRad] = useState(40);
   const [circleGap, setCircleGap] = useState(30);
+  const [activePanel, setActivePanel] = useState<ActivePanel>(null);
 
   return (
-    <>
-      <SidebarProvider className="pointer-events-none absolute top-0 right-0 bottom-0 left-0">
-        <AppSidebar />
-        {/* <ControlPanel
-        circleRad={circleRad}
-        setCircleRad={setCircleRad}
-        circleGap={circleGap}
-        setCircleGap={setCircleGap}
-      /> */}
-        <SidebarTrigger className="pointer-events-auto" />
+    <div className="relative h-screen w-screen overflow-hidden bg-background">
+      {/* Canvas Layer - absolute behind everything */}
+      <div className="absolute inset-0 z-0">
+        <CanvasComponent circleRad={circleRad} circleGap={circleGap} />
+      </div>
+
+      {/* UI Layer */}
+      <SidebarProvider className="pointer-events-none absolute inset-0 z-10 flex w-full">
+        <div className="pointer-events-auto flex h-full">
+          <AppSidebar activePanel={activePanel} setActivePanel={setActivePanel} />
+          
+          {/* Sliding Panels */}
+          {activePanel === 'properties' && (
+            <PropertiesPanel 
+              circleRad={circleRad} 
+              setCircleRad={setCircleRad} 
+              circleGap={circleGap} 
+              setCircleGap={setCircleGap}
+              onClose={() => setActivePanel(null)}
+            />
+          )}
+          
+          {activePanel === 'effects' && (
+            <EffectsPanel onClose={() => setActivePanel(null)} />
+          )}
+        </div>
       </SidebarProvider>
-      <CanvasComponent circleRad={circleRad} circleGap={circleGap} />
-    </>
+    </div>
   );
 }
 

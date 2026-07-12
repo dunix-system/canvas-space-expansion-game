@@ -1,88 +1,74 @@
+import { useState } from "react";
 import {
   Sidebar,
   SidebarContent,
-  SidebarFooter,
-  SidebarGroup,
   SidebarHeader,
   SidebarMenu,
   SidebarMenuButton,
   SidebarMenuItem,
+  SidebarTrigger,
+  useSidebar,
 } from "@/components/ui/sidebar";
+import { PlanetIcon, SlidersHorizontal, Sparkle, SidebarSimple } from "@phosphor-icons/react";
 
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+interface AppSidebarProps {
+  activePanel: "properties" | "effects" | null;
+  setActivePanel: React.Dispatch<React.SetStateAction<"properties" | "effects" | null>>;
+}
 
-import { CompassToolIcon } from "@phosphor-icons/react";
+export const AppSidebar = ({ activePanel, setActivePanel }: AppSidebarProps) => {
+  const { state, toggleSidebar } = useSidebar();
+  const [isHovered, setIsHovered] = useState(false);
 
-export const AppSidebar = () => {
   return (
-    <Sidebar collapsible="icon" className="pointer-events-auto">
-      <SidebarHeader>
-        <CompassToolIcon size={32} />
+    <Sidebar collapsible="icon" className="pointer-events-auto border-r border-sidebar-border shadow-sm">
+      <SidebarHeader className="flex h-14 flex-row items-center justify-between px-2 py-2">
+        {state === "collapsed" ? (
+          <div 
+            className="flex h-8 w-8 items-center justify-center cursor-pointer rounded-md hover:bg-sidebar-accent hover:text-sidebar-accent-foreground transition-colors mx-auto"
+            onMouseEnter={() => setIsHovered(true)}
+            onMouseLeave={() => setIsHovered(false)}
+            onClick={toggleSidebar}
+            title="Expand Sidebar"
+          >
+            {isHovered ? <SidebarSimple size={20} /> : <PlanetIcon size={20} className="text-primary" />}
+          </div>
+        ) : (
+          <div className="flex w-full items-center justify-between overflow-hidden">
+            <div className="flex items-center gap-2 px-1">
+              <PlanetIcon size={24} className="text-primary shrink-0" />
+              <span className="font-semibold text-lg tracking-tight truncate">spaceexp</span>
+            </div>
+            <SidebarTrigger className="shrink-0" />
+          </div>
+        )}
       </SidebarHeader>
+      
       <SidebarContent>
-        <Tabs orientation="vertical" className="">
-          <TabsList>
-            <TabsTrigger value="overview">Overview</TabsTrigger>
-            <TabsTrigger value="analytics">Analytics</TabsTrigger>
-            <TabsTrigger value="reports">Reports</TabsTrigger>
-            <TabsTrigger value="settings">Settings</TabsTrigger>
-          </TabsList>
-          <TabsContent value="overview">
-            <Card>
-              <CardHeader>
-                <CardTitle>Overview</CardTitle>
-                <CardDescription>
-                  View your key metrics and recent project activity. Track progress across all your active
-                  projects.
-                </CardDescription>
-              </CardHeader>
-              <CardContent className="text-muted-foreground text-sm">
-                You have 12 active projects and 3 pending tasks.
-              </CardContent>
-            </Card>
-          </TabsContent>
-          <TabsContent value="analytics">
-            <Card>
-              <CardHeader>
-                <CardTitle>Analytics</CardTitle>
-                <CardDescription>
-                  Track performance and user engagement metrics. Monitor trends and identify growth
-                  opportunities.
-                </CardDescription>
-              </CardHeader>
-              <CardContent className="text-muted-foreground text-sm">
-                Page views are up 25% compared to last month.
-              </CardContent>
-            </Card>
-          </TabsContent>
-          <TabsContent value="reports">
-            <Card>
-              <CardHeader>
-                <CardTitle>Reports</CardTitle>
-                <CardDescription>
-                  Generate and download your detailed reports. Export data in multiple formats for analysis.
-                </CardDescription>
-              </CardHeader>
-              <CardContent className="text-muted-foreground text-sm">
-                You have 5 reports ready and available to export.
-              </CardContent>
-            </Card>
-          </TabsContent>
-          <TabsContent value="settings">
-            <Card>
-              <CardHeader>
-                <CardTitle>Settings</CardTitle>
-                <CardDescription>
-                  Manage your account preferences and options. Customize your experience to fit your needs.
-                </CardDescription>
-              </CardHeader>
-              <CardContent className="text-muted-foreground text-sm">
-                Configure notifications, security, and themes.
-              </CardContent>
-            </Card>
-          </TabsContent>
-        </Tabs>
+        <SidebarMenu className="mt-4 gap-2 px-2">
+          <SidebarMenuItem>
+            <SidebarMenuButton 
+              isActive={activePanel === 'properties'} 
+              onClick={() => setActivePanel(activePanel === 'properties' ? null : 'properties')}
+              tooltip="Properties"
+              size="lg"
+            >
+              <SlidersHorizontal size={20} />
+              <span>Properties</span>
+            </SidebarMenuButton>
+          </SidebarMenuItem>
+          <SidebarMenuItem>
+            <SidebarMenuButton 
+              isActive={activePanel === 'effects'} 
+              onClick={() => setActivePanel(activePanel === 'effects' ? null : 'effects')}
+              tooltip="Effects"
+              size="lg"
+            >
+              <Sparkle size={20} />
+              <span>Effects</span>
+            </SidebarMenuButton>
+          </SidebarMenuItem>
+        </SidebarMenu>
       </SidebarContent>
     </Sidebar>
   );
