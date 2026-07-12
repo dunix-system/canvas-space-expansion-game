@@ -134,13 +134,8 @@
 }
 
 #root {
-  /* max-width: 100svw;
-  min-height: 100svh; */
-  width: 100svw;
-  height: 100svh;
-  margin: 0 auto;
-  box-sizing: border-box;
-  padding: 10px;
+  width: 100%;
+  height: 100%;
 }
 
 body {

@@ -10,7 +10,7 @@ export const EffectsPanel = ({ onClose }: EffectsPanelProps) => {
     <div className="bg-sidebar border-sidebar-border pointer-events-auto flex h-fit max-h-full w-80 flex-col border-r shadow-xl">
       <div className="border-sidebar-border flex items-center justify-between border-b p-4">
         <h2 className="text-sidebar-foreground text-lg font-semibold tracking-tight">Effects</h2>
-        <Button variant="ghost" size="icon-sm" onClick={onClose} className="text-sidebar-foreground/70">
+        <Button variant="secondary" size="icon-sm" onClick={onClose} className="text-sidebar-foreground/70">
           <X size={32} />
         </Button>
       </div>
