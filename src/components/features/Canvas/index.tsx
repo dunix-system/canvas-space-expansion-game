@@ -61,12 +61,14 @@ const CanvasComponent: React.FC<CanvasComponentProps> = ({ circleGap, circleRad 
 
     const circleDiam = circleRad * 2;
     const circleExt = circleDiam + circleGap;
+    if (Math.abs(circleExt) < 5) return; // Prevent infinite loops and browser freeze
 
-    const cols = Math.floor((canvas.width + circleGap) / circleExt);
-    const rows = Math.floor((canvas.height + circleGap) / circleExt);
+    const step = Math.abs(circleExt);
+    const cols = Math.floor((canvas.width + circleGap) / step);
+    const rows = Math.floor((canvas.height + circleGap) / step);
 
-    const startCol = Math.floor(-x / circleExt) - 1;
-    const startRow = Math.floor(-y / circleExt) - 1;
+    const startCol = Math.floor(-x / step) - 1;
+    const startRow = Math.floor(-y / step) - 1;
     const endCol = startCol + cols + 2;
     const endRow = startRow + rows + 2;
 
@@ -74,7 +76,7 @@ const CanvasComponent: React.FC<CanvasComponentProps> = ({ circleGap, circleRad 
       for (let colNum = startCol; colNum <= endCol; colNum += 1) {
         ctx.fillStyle = CIRCLE_COLOR;
         ctx.beginPath();
-        ctx.arc(circleExt * colNum + circleRad, circleExt * rowNum + circleRad, circleRad, 0, 2 * Math.PI);
+        ctx.arc(step * colNum + circleRad, step * rowNum + circleRad, circleRad, 0, 2 * Math.PI);
         ctx.fill();
       }
     }
