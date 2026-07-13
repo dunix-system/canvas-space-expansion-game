@@ -16,11 +16,12 @@ import {
   SidebarSimple,
   CaretRight,
   CaretLeft,
+  DiceFive,
 } from "@phosphor-icons/react";
 
 interface AppSidebarProps {
-  activePanel: "properties" | "effects" | null;
-  setActivePanel: React.Dispatch<React.SetStateAction<"properties" | "effects" | null>>;
+  activePanel: "properties" | "effects" | "randomizers" | null;
+  setActivePanel: React.Dispatch<React.SetStateAction<"properties" | "effects" | "randomizers" | null>>;
 }
 
 export const AppSidebar = ({ activePanel, setActivePanel }: AppSidebarProps) => {
@@ -64,6 +65,18 @@ export const AppSidebar = ({ activePanel, setActivePanel }: AppSidebarProps) => 
               className={`overflow-hidden text-sm font-medium whitespace-nowrap transition-all duration-300 ease-in-out ${isMobileExpanded ? "max-w-[100px] opacity-100" : "max-w-0 opacity-0"}`}
             >
               Effects
+            </span>
+          </button>
+
+          <button
+            onClick={() => setActivePanel(activePanel === "randomizers" ? null : "randomizers")}
+            className={`flex h-full items-center transition-all duration-300 ease-in-out ${isMobileExpanded ? "gap-1" : "gap-0"} shrink-0 rounded-none border-none px-3 ${activePanel === "randomizers" ? "bg-sidebar-accent text-sidebar-accent-foreground font-medium" : "text-sidebar-foreground hover:bg-sidebar-accent/50"}`}
+          >
+            <DiceFive size={28} className="shrink-0" />
+            <span
+              className={`overflow-hidden text-sm font-medium whitespace-nowrap transition-all duration-300 ease-in-out ${isMobileExpanded ? "max-w-[100px] opacity-100" : "max-w-0 opacity-0"}`}
+            >
+              Randomizers
             </span>
           </button>
         </div>
@@ -126,6 +139,18 @@ export const AppSidebar = ({ activePanel, setActivePanel }: AppSidebarProps) => 
             >
               <Sparkle />
               <span className="group-data-[collapsible=icon]:hidden">Effects</span>
+            </SidebarMenuButton>
+          </SidebarMenuItem>
+          <SidebarMenuItem>
+            <SidebarMenuButton
+              isActive={activePanel === "randomizers"}
+              onClick={() => setActivePanel(activePanel === "randomizers" ? null : "randomizers")}
+              tooltip="Randomizers"
+              size="lg"
+              className="!text-sm group-data-[collapsible=icon]:!h-12 group-data-[collapsible=icon]:!w-full group-data-[collapsible=icon]:justify-center group-data-[collapsible=icon]:!p-0 [&>svg]:!size-6"
+            >
+              <DiceFive />
+              <span className="group-data-[collapsible=icon]:hidden">Randomizers</span>
             </SidebarMenuButton>
           </SidebarMenuItem>
         </SidebarMenu>
