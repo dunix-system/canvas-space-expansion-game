@@ -1,7 +1,7 @@
 import { useState } from "react";
 import CanvasComponent from "./components/features/Canvas";
 import { AppSidebar } from "./components/features/AppSidebar";
-import { SidebarProvider, SidebarTrigger } from "./components/ui/sidebar";
+import { SidebarProvider } from "./components/ui/sidebar";
 import { PropertiesPanel } from "./components/features/PropertiesPanel";
 import { EffectsPanel } from "./components/features/EffectsPanel";
 
@@ -11,12 +11,26 @@ function App() {
   const [circleRad, setCircleRad] = useState(40);
   const [circleGap, setCircleGap] = useState(0);
   const [angle, setAngle] = useState(0);
+  
+  const [glowEnabled, setGlowEnabled] = useState(false);
+  const [glowIntensity, setGlowIntensity] = useState(15);
+  const [glowStrength, setGlowStrength] = useState(1);
+  const [trailEnabled, setTrailEnabled] = useState(false);
+  
   const [activePanel, setActivePanel] = useState<ActivePanel>(null);
 
   return (
     <div className="bg-background relative h-screen w-screen overflow-hidden">
       <div className="absolute inset-0 z-0">
-        <CanvasComponent circleRad={circleRad} circleGap={circleGap} angle={angle} />
+        <CanvasComponent 
+          circleRad={circleRad} 
+          circleGap={circleGap} 
+          angle={angle} 
+          glowEnabled={glowEnabled}
+          glowIntensity={glowIntensity}
+          glowStrength={glowStrength}
+          trailEnabled={trailEnabled}
+        />
       </div>
 
       <SidebarProvider className="pointer-events-none absolute inset-0 z-10 flex w-full">
@@ -35,7 +49,19 @@ function App() {
             />
           )}
 
-          {activePanel === "effects" && <EffectsPanel onClose={() => setActivePanel(null)} />}
+          {activePanel === "effects" && (
+            <EffectsPanel 
+              glowEnabled={glowEnabled}
+              setGlowEnabled={setGlowEnabled}
+              glowIntensity={glowIntensity}
+              setGlowIntensity={setGlowIntensity}
+              glowStrength={glowStrength}
+              setGlowStrength={setGlowStrength}
+              trailEnabled={trailEnabled}
+              setTrailEnabled={setTrailEnabled}
+              onClose={() => setActivePanel(null)} 
+            />
+          )}
         </div>
       </SidebarProvider>
     </div>
