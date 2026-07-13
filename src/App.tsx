@@ -8,14 +8,15 @@ import { EffectsPanel } from "./components/features/EffectsPanel";
 export type ActivePanel = "properties" | "effects" | null;
 
 function App() {
-  const [circleRad, setCircleRad] = useState(40);
-  const [circleGap, setCircleGap] = useState(0);
-  const [angle, setAngle] = useState(0);
+  const [circleRad, setCircleRad] = useState(42);
+  const [circleGap, setCircleGap] = useState(12);
+  const [angle, setAngle] = useState(30);
   
   const [glowEnabled, setGlowEnabled] = useState(false);
   const [glowIntensity, setGlowIntensity] = useState(15);
   const [glowStrength, setGlowStrength] = useState(1);
   const [trailEnabled, setTrailEnabled] = useState(false);
+  const [inertiaEnabled, setInertiaEnabled] = useState(true);
   
   const [activePanel, setActivePanel] = useState<ActivePanel>(null);
 
@@ -30,10 +31,11 @@ function App() {
           glowIntensity={glowIntensity}
           glowStrength={glowStrength}
           trailEnabled={trailEnabled}
+          inertiaEnabled={inertiaEnabled}
         />
       </div>
 
-      <SidebarProvider className="pointer-events-none absolute inset-0 z-10 flex w-full">
+      <SidebarProvider defaultOpen={false} className="pointer-events-none absolute inset-0 z-10 flex w-full">
         <div className="pointer-events-none relative flex h-full w-full">
           <AppSidebar activePanel={activePanel} setActivePanel={setActivePanel} />
 
@@ -59,6 +61,8 @@ function App() {
               setGlowStrength={setGlowStrength}
               trailEnabled={trailEnabled}
               setTrailEnabled={setTrailEnabled}
+              inertiaEnabled={inertiaEnabled}
+              setInertiaEnabled={setInertiaEnabled}
               onClose={() => setActivePanel(null)} 
             />
           )}

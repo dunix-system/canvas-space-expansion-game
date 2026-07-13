@@ -13,22 +13,25 @@ interface CanvasComponentProps {
   glowIntensity: number;
   glowStrength: number;
   trailEnabled: boolean;
+  inertiaEnabled: boolean;
 }
 
-const CanvasComponent: React.FC<CanvasComponentProps> = ({ circleGap, circleRad, angle, glowEnabled, glowIntensity, glowStrength, trailEnabled }) => {
+const CanvasComponent: React.FC<CanvasComponentProps> = ({ circleGap, circleRad, angle, glowEnabled, glowIntensity, glowStrength, trailEnabled, inertiaEnabled }) => {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const cameraRef = useRef<{ u: number; v: number }>({ u: 0, v: 0 });
   const startMouseRef = useRef<{ x: number; y: number }>({ x: 0, y: 0 });
   const currentMouseRef = useRef<{ x: number; y: number } | null>(null);
+  const velocityRef = useRef<{ u: number; v: number }>({ u: 0, v: 0 });
+  const isFloatingAnimActiveRef = useRef<boolean>(true);
   const rafRef = useRef<number | null>(null);
   const fadeCounterRef = useRef<number>(0);
   const prevCameraRef = useRef<{ u: number; v: number }>({ u: 0, v: 0 });
 
-  const propsRef = useRef({ circleRad, circleGap, angle, glowEnabled, glowIntensity, glowStrength, trailEnabled });
+  const propsRef = useRef({ circleRad, circleGap, angle, glowEnabled, glowIntensity, glowStrength, trailEnabled, inertiaEnabled });
 
   useEffect(() => {
-    propsRef.current = { circleRad, circleGap, angle, glowEnabled, glowIntensity, glowStrength, trailEnabled };
-  }, [circleRad, circleGap, angle, glowEnabled, glowIntensity, glowStrength, trailEnabled]);
+    propsRef.current = { circleRad, circleGap, angle, glowEnabled, glowIntensity, glowStrength, trailEnabled, inertiaEnabled };
+  }, [circleRad, circleGap, angle, glowEnabled, glowIntensity, glowStrength, trailEnabled, inertiaEnabled]);
 
   const draw = useCallback(() => {
     const canvas = canvasRef.current;
@@ -77,10 +80,11 @@ const CanvasComponent: React.FC<CanvasComponentProps> = ({ circleGap, circleRad,
     ctx.rotate(angleRad);
 
     const circleDiam = circleRad * 2;
-    const circleExt = circleDiam + circleGap;
-    if (Math.abs(circleExt) < 5) return; // Prevent infinite loops and browser freeze
-
-    const step = Math.abs(circleExt);
+    // Calculate relative step based on disk size. 10 gap = 1 full disk width.
+    // Range [-7, 7] maps to 7 for performance and visual reasons.
+    // Clamp to minimum of 5 to prevent infinite loops and freezing.
+    const effectiveGap = Math.max(7, Math.abs(circleGap));
+    const step = Math.max(5, circleDiam * (effectiveGap / 10));
 
     const camWorldX = cameraRef.current.u * step;
     const camWorldY = cameraRef.current.v * step;
@@ -169,18 +173,57 @@ const CanvasComponent: React.FC<CanvasComponentProps> = ({ circleGap, circleRad,
         const worldDy = -screenDx * sinA + screenDy * cosA;
 
         const circleDiam = circleRad * 2;
-        const circleExt = circleDiam + circleGap;
-        if (Math.abs(circleExt) >= 5) {
-          const step = Math.abs(circleExt);
+        const effectiveGap = Math.max(7, Math.abs(circleGap));
+        const step = Math.max(5, circleDiam * (effectiveGap / 10));
 
+        const du = (worldDx * SPEED_FACTOR) / step;
+        const dv = (worldDy * SPEED_FACTOR) / step;
+
+        cameraRef.current = {
+          u: cameraRef.current.u + du,
+          v: cameraRef.current.v + dv,
+        };
+        velocityRef.current = { u: du, v: dv };
+      } else {
+        // Apply inertia when mouse is released
+        if (propsRef.current.inertiaEnabled && (Math.abs(velocityRef.current.u) > 0.0001 || Math.abs(velocityRef.current.v) > 0.0001)) {
           cameraRef.current = {
-            u: cameraRef.current.u + (worldDx * SPEED_FACTOR) / step,
-            v: cameraRef.current.v + (worldDy * SPEED_FACTOR) / step,
+            u: cameraRef.current.u + velocityRef.current.u,
+            v: cameraRef.current.v + velocityRef.current.v,
+          };
+          velocityRef.current.u *= 0.95;
+          velocityRef.current.v *= 0.95;
+        } else {
+          velocityRef.current.u = 0;
+          velocityRef.current.v = 0;
+
+          if (isFloatingAnimActiveRef.current) {
+          // Play slow animation of floating through space on first launch
+          const { angle, circleRad, circleGap } = propsRef.current;
+          const circleDiam = circleRad * 2;
+          const effectiveGap = Math.max(7, Math.abs(circleGap));
+          const step = Math.max(5, circleDiam * (effectiveGap / 10));
+          
+          const angleRad = (angle * Math.PI) / 180;
+          const cosA = Math.cos(angleRad);
+          const sinA = Math.sin(angleRad);
+          
+          // Move slowly in a diagonal direction
+          const worldDx = 2 * cosA + 2 * sinA;
+          const worldDy = -2 * sinA + 2 * cosA;
+          
+          const du = (worldDx * SPEED_FACTOR) / step;
+          const dv = (worldDy * SPEED_FACTOR) / step;
+          
+          cameraRef.current = {
+            u: cameraRef.current.u + du,
+            v: cameraRef.current.v + dv,
           };
         }
       }
+    }
 
-      rafRef.current = requestAnimationFrame(loop);
+    rafRef.current = requestAnimationFrame(loop);
     },
     [draw],
   );
@@ -209,6 +252,8 @@ const CanvasComponent: React.FC<CanvasComponentProps> = ({ circleGap, circleRad,
 
     const onPointerDown = (event: PointerEvent) => {
       canvas.setPointerCapture(event.pointerId);
+
+      isFloatingAnimActiveRef.current = false; // Stop animation after first click
 
       startMouseRef.current = { x: event.pageX, y: event.pageY };
       currentMouseRef.current = { x: event.pageX, y: event.pageY };

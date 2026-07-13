@@ -67,8 +67,8 @@ export const PropertiesPanel = ({
                 id="circleGap"
                 value={circleGap}
                 onValueChange={setCircleGap}
-                min={-800}
-                max={800}
+                min={-50}
+                max={50}
                 className="h-auto w-32 [appearance:textfield] border-transparent bg-transparent! pr-3 pl-3 text-right text-4xl! font-bold tracking-tighter shadow-none focus-visible:border-transparent focus-visible:ring-0 [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
               />
             </div>
@@ -77,8 +77,8 @@ export const PropertiesPanel = ({
 
               <Slider
                 value={[circleGap]}
-                max={800}
-                min={-800}
+                max={50}
+                min={-50}
                 step={1}
                 onValueChange={(val) => setCircleGap(val[0])}
               />

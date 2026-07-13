@@ -14,6 +14,8 @@ interface EffectsPanelProps {
   setGlowStrength: Dispatch<SetStateAction<number>>;
   trailEnabled: boolean;
   setTrailEnabled: Dispatch<SetStateAction<boolean>>;
+  inertiaEnabled: boolean;
+  setInertiaEnabled: Dispatch<SetStateAction<boolean>>;
   onClose: () => void;
 }
 
@@ -26,6 +28,8 @@ export const EffectsPanel = ({
   setGlowStrength,
   trailEnabled,
   setTrailEnabled,
+  inertiaEnabled,
+  setInertiaEnabled,
   onClose 
 }: EffectsPanelProps) => {
   return (
@@ -89,6 +93,16 @@ export const EffectsPanel = ({
                 onCheckedChange={(checked) => setTrailEnabled(!!checked)} 
               />
               <FieldLabel htmlFor="trailEnabled" className="cursor-pointer text-base">Enable Motion Blur (Trail)</FieldLabel>
+            </div>
+          </Field>
+          <Field className="gap-4">
+            <div className="flex items-center space-x-2">
+              <Checkbox 
+                id="inertiaEnabled" 
+                checked={inertiaEnabled} 
+                onCheckedChange={(checked) => setInertiaEnabled(!!checked)} 
+              />
+              <FieldLabel htmlFor="inertiaEnabled" className="cursor-pointer text-base">Enable Smooth Stop</FieldLabel>
             </div>
           </Field>
         </FieldGroup>
