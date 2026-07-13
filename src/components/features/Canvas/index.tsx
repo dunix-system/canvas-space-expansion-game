@@ -51,8 +51,11 @@ const CanvasComponent: React.FC<CanvasComponentProps> = ({ circleGap, circleRad 
     const ctx = canvas.getContext("2d");
     if (!ctx) return;
 
-    const x = mouseOffsetRef.current.x + defCanvasCoordsRef.current.x;
-    const y = mouseOffsetRef.current.y + defCanvasCoordsRef.current.y;
+    const centerX = canvas.width / 2;
+    const centerY = canvas.height / 2;
+
+    const x = mouseOffsetRef.current.x + defCanvasCoordsRef.current.x + centerX - circleRad;
+    const y = mouseOffsetRef.current.y + defCanvasCoordsRef.current.y + centerY - circleRad;
 
     ctx.fillStyle = CANVAS_COLOR_BG;
     ctx.fillRect(0, 0, canvas.width, canvas.height);
