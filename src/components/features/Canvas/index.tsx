@@ -9,26 +9,29 @@ interface CanvasComponentProps {
   circleRad: number;
   circleGap: number;
   angle: number;
+  glowEnabled: boolean;
+  glowIntensity: number;
+  glowStrength: number;
 }
 
-const CanvasComponent: React.FC<CanvasComponentProps> = ({ circleGap, circleRad, angle }) => {
+const CanvasComponent: React.FC<CanvasComponentProps> = ({ circleGap, circleRad, angle, glowEnabled, glowIntensity, glowStrength }) => {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const cameraRef = useRef<{ u: number; v: number }>({ u: 0, v: 0 });
   const startMouseRef = useRef<{ x: number; y: number }>({ x: 0, y: 0 });
   const currentMouseRef = useRef<{ x: number; y: number } | null>(null);
   const rafRef = useRef<number | null>(null);
 
-  const propsRef = useRef({ circleRad, circleGap, angle });
+  const propsRef = useRef({ circleRad, circleGap, angle, glowEnabled, glowIntensity, glowStrength });
 
   useEffect(() => {
-    propsRef.current = { circleRad, circleGap, angle };
-  }, [circleRad, circleGap, angle]);
+    propsRef.current = { circleRad, circleGap, angle, glowEnabled, glowIntensity, glowStrength };
+  }, [circleRad, circleGap, angle, glowEnabled, glowIntensity, glowStrength]);
 
   const draw = useCallback(() => {
     const canvas = canvasRef.current;
     if (!canvas) return;
 
-    const { circleRad, circleGap, angle } = propsRef.current;
+    const { circleRad, circleGap, angle, glowEnabled, glowIntensity, glowStrength } = propsRef.current;
 
     const logicalWidth = canvas.offsetWidth;
     const logicalHeight = canvas.offsetHeight;
@@ -69,13 +72,31 @@ const CanvasComponent: React.FC<CanvasComponentProps> = ({ circleGap, circleRad,
     const endCol = Math.floor((camWorldX + diagonal / 2) / step) + 1;
     const endRow = Math.floor((camWorldY + diagonal / 2) / step) + 1;
 
+    ctx.fillStyle = CIRCLE_COLOR;
+    ctx.beginPath();
     for (let rowNum = startRow; rowNum <= endRow; rowNum += 1) {
       for (let colNum = startCol; colNum <= endCol; colNum += 1) {
-        ctx.fillStyle = CIRCLE_COLOR;
-        ctx.beginPath();
-        ctx.arc(step * colNum, step * rowNum, circleRad, 0, 2 * Math.PI);
+        const cx = step * colNum;
+        const cy = step * rowNum;
+        ctx.moveTo(cx + circleRad, cy);
+        ctx.arc(cx, cy, circleRad, 0, 2 * Math.PI);
+      }
+    }
+
+    if (glowEnabled) {
+      ctx.shadowColor = CIRCLE_COLOR;
+      ctx.globalCompositeOperation = "lighter";
+      
+      for (let i = glowStrength; i > 0; i--) {
+        ctx.shadowBlur = (glowIntensity / glowStrength) * i;
         ctx.fill();
       }
+      
+      ctx.globalCompositeOperation = "source-over";
+    } else {
+      ctx.shadowBlur = 0;
+      ctx.shadowColor = "transparent";
+      ctx.fill();
     }
   }, []);
 
@@ -114,7 +135,7 @@ const CanvasComponent: React.FC<CanvasComponentProps> = ({ circleGap, circleRad,
 
   useEffect(() => {
     draw();
-  }, [draw, circleRad, circleGap, angle]);
+  }, [draw, circleRad, circleGap, angle, glowEnabled, glowIntensity, glowStrength]);
 
   useEffect(() => {
     const canvas = canvasRef.current;
