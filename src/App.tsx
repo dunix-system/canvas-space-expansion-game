@@ -10,12 +10,13 @@ export type ActivePanel = "properties" | "effects" | null;
 function App() {
   const [circleRad, setCircleRad] = useState(40);
   const [circleGap, setCircleGap] = useState(0);
+  const [angle, setAngle] = useState(0);
   const [activePanel, setActivePanel] = useState<ActivePanel>(null);
 
   return (
     <div className="bg-background relative h-screen w-screen overflow-hidden">
       <div className="absolute inset-0 z-0">
-        <CanvasComponent circleRad={circleRad} circleGap={circleGap} />
+        <CanvasComponent circleRad={circleRad} circleGap={circleGap} angle={angle} />
       </div>
 
       <SidebarProvider className="pointer-events-none absolute inset-0 z-10 flex w-full">
@@ -28,6 +29,8 @@ function App() {
               setCircleRad={setCircleRad}
               circleGap={circleGap}
               setCircleGap={setCircleGap}
+              angle={angle}
+              setAngle={setAngle}
               onClose={() => setActivePanel(null)}
             />
           )}

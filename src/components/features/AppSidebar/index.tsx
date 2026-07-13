@@ -70,7 +70,7 @@ export const AppSidebar = ({ activePanel, setActivePanel }: AppSidebarProps) => 
 
         <button
           onClick={() => setIsMobileExpanded(!isMobileExpanded)}
-          className="bg-sidebar-accent hover:bg-sidebar-accent/80 text-sidebar-foreground ml-0 shrink-0 rounded-none p-1 transition-colors"
+          className="bg-sidebar-accent hover:bg-sidebar-accent/80 text-sidebar-foreground/70 ml-0 shrink-0 rounded-none p-1 transition-colors"
         >
           {isMobileExpanded ? <CaretLeft size={20} /> : <CaretRight size={20} />}
         </button>

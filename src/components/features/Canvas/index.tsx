@@ -9,74 +9,90 @@ const CIRCLE_COLOR = "#ffffff";
 interface CanvasComponentProps {
   circleRad: number;
   circleGap: number;
+  angle: number;
 }
 
-const CanvasComponent: React.FC<CanvasComponentProps> = ({ circleGap, circleRad }) => {
+const CanvasComponent: React.FC<CanvasComponentProps> = ({ circleGap, circleRad, angle }) => {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
-  const defCanvasCoordsRef = useRef<{ x: number; y: number }>({ x: 0, y: 0 });
-  const defMouseCoordsRef = useRef<{ x: number; y: number }>({ x: 0, y: 0 });
-  const mouseOffsetRef = useRef<{ x: number; y: number }>({ x: 0, y: 0 });
-
-  const setMouseCoords = (event: PointerEvent) => {
-    defMouseCoordsRef.current = { x: event.pageX, y: event.pageY };
-  };
+  const cameraRef = useRef<{ u: number; v: number }>({ u: 0, v: 0 });
+  const startCameraRef = useRef<{ u: number; v: number }>({ u: 0, v: 0 });
+  const startMouseRef = useRef<{ x: number; y: number }>({ x: 0, y: 0 });
 
   const calculateMouseOffset = (event: PointerEvent) => {
-    const x = defMouseCoordsRef.current.x - event.pageX;
-    const y = defMouseCoordsRef.current.y - event.pageY;
-    mouseOffsetRef.current = { x, y };
+    const screenDx = event.pageX - startMouseRef.current.x;
+    const screenDy = event.pageY - startMouseRef.current.y;
+    
+    const angleRad = (angle * Math.PI) / 180;
+    const cosA = Math.cos(angleRad);
+    const sinA = Math.sin(angleRad);
+    
+    const worldDx = screenDx * cosA + screenDy * sinA;
+    const worldDy = -screenDx * sinA + screenDy * cosA;
+    
+    const circleDiam = circleRad * 2;
+    const circleExt = circleDiam + circleGap;
+    if (Math.abs(circleExt) < 5) return;
+    const step = Math.abs(circleExt);
+
+    cameraRef.current = {
+      u: startCameraRef.current.u + worldDx / step,
+      v: startCameraRef.current.v + worldDy / step,
+    };
 
     requestAnimationFrame(draw);
-  };
-
-  const resetMouseOffset = () => {
-    mouseOffsetRef.current = { x: 0, y: 0 };
-  };
-
-  const setCanvasCoords = () => {
-    const x = defCanvasCoordsRef.current.x + mouseOffsetRef.current.x;
-    const y = defCanvasCoordsRef.current.y + mouseOffsetRef.current.y;
-
-    defCanvasCoordsRef.current = { x, y };
-    resetMouseOffset();
   };
 
   const draw = () => {
     const canvas = canvasRef.current;
     if (!canvas) return;
 
-    canvas.width = canvas.offsetWidth;
-    canvas.height = canvas.offsetHeight;
+    const logicalWidth = canvas.offsetWidth;
+    const logicalHeight = canvas.offsetHeight;
+    const dpr = window.devicePixelRatio || 1;
+
+    canvas.width = logicalWidth * dpr;
+    canvas.height = logicalHeight * dpr;
 
     const ctx = canvas.getContext("2d");
     if (!ctx) return;
 
-    const x = mouseOffsetRef.current.x + defCanvasCoordsRef.current.x;
-    const y = mouseOffsetRef.current.y + defCanvasCoordsRef.current.y;
+    ctx.scale(dpr, dpr);
+
+    const centerX = logicalWidth / 2;
+    const centerY = logicalHeight / 2;
 
     ctx.fillStyle = CANVAS_COLOR_BG;
-    ctx.fillRect(0, 0, canvas.width, canvas.height);
+    ctx.fillRect(0, 0, logicalWidth, logicalHeight);
 
-    ctx.translate(x, y);
+    ctx.translate(centerX, centerY);
+    const angleRad = (angle * Math.PI) / 180;
+    ctx.rotate(angleRad);
 
     const circleDiam = circleRad * 2;
     const circleExt = circleDiam + circleGap;
     if (Math.abs(circleExt) < 5) return; // Prevent infinite loops and browser freeze
 
     const step = Math.abs(circleExt);
-    const cols = Math.floor((canvas.width + circleGap) / step);
-    const rows = Math.floor((canvas.height + circleGap) / step);
 
-    const startCol = Math.floor(-x / step) - 1;
-    const startRow = Math.floor(-y / step) - 1;
-    const endCol = startCol + cols + 2;
-    const endRow = startRow + rows + 2;
+    const camWorldX = cameraRef.current.u * step;
+    const camWorldY = cameraRef.current.v * step;
+
+    ctx.translate(-camWorldX, -camWorldY);
+
+    const diagonal = Math.sqrt(logicalWidth * logicalWidth + logicalHeight * logicalHeight);
+    const cols = Math.floor(diagonal / step);
+    const rows = Math.floor(diagonal / step);
+
+    const startCol = Math.floor((camWorldX - diagonal / 2) / step) - 1;
+    const startRow = Math.floor((camWorldY - diagonal / 2) / step) - 1;
+    const endCol = Math.floor((camWorldX + diagonal / 2) / step) + 1;
+    const endRow = Math.floor((camWorldY + diagonal / 2) / step) + 1;
 
     for (let rowNum = startRow; rowNum <= endRow; rowNum += 1) {
       for (let colNum = startCol; colNum <= endCol; colNum += 1) {
         ctx.fillStyle = CIRCLE_COLOR;
         ctx.beginPath();
-        ctx.arc(step * colNum + circleRad, step * rowNum + circleRad, circleRad, 0, 2 * Math.PI);
+        ctx.arc(step * colNum, step * rowNum, circleRad, 0, 2 * Math.PI);
         ctx.fill();
       }
     }
@@ -88,7 +104,9 @@ const CanvasComponent: React.FC<CanvasComponentProps> = ({ circleGap, circleRad 
 
     canvas.setPointerCapture(event.pointerId);
 
-    setMouseCoords(event);
+    startMouseRef.current = { x: event.pageX, y: event.pageY };
+    startCameraRef.current = { u: cameraRef.current.u, v: cameraRef.current.v };
+    
     canvas.addEventListener("pointermove", onPointerMove);
     canvas.addEventListener("pointerup", onPointerUp);
     canvas.addEventListener("pointercancel", onPointerUp); // Catch edge cases where the browser forcibly stops the drag
@@ -109,7 +127,6 @@ const CanvasComponent: React.FC<CanvasComponentProps> = ({ circleGap, circleRad 
     canvas.removeEventListener("pointercancel", onPointerUp);
 
     calculateMouseOffset(event);
-    setCanvasCoords();
   };
 
   useEffect(() => {
@@ -130,7 +147,7 @@ const CanvasComponent: React.FC<CanvasComponentProps> = ({ circleGap, circleRad 
         canvas.removeEventListener("pointercancel", onPointerUp);
       }
     };
-  }, [circleRad, circleGap]);
+  }, [circleRad, circleGap, angle]);
 
   return <canvas ref={canvasRef} className={clsx("h-full w-full touch-none")} />;
 };

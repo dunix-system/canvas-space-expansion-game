@@ -1,7 +1,8 @@
 import { Field, FieldGroup, FieldLabel } from "@/components/ui/field";
-import { Input } from "@/components/ui/input";
+import { ScrubbableInput } from "@/components/ui/scrubbable-input";
 import { Button } from "@/components/ui/button";
 import { Slider } from "@/components/ui/slider";
+import { Knob } from "@/components/ui/knob";
 import { X } from "@phosphor-icons/react";
 import type { Dispatch, SetStateAction } from "react";
 
@@ -10,6 +11,8 @@ interface PropertiesPanelProps {
   setCircleRad: Dispatch<SetStateAction<number>>;
   circleGap: number;
   setCircleGap: Dispatch<SetStateAction<number>>;
+  angle: number;
+  setAngle: Dispatch<SetStateAction<number>>;
   onClose: () => void;
 }
 
@@ -18,6 +21,8 @@ export const PropertiesPanel = ({
   setCircleRad,
   circleGap,
   setCircleGap,
+  angle,
+  setAngle,
   onClose,
 }: PropertiesPanelProps) => {
   return (
@@ -38,13 +43,12 @@ export const PropertiesPanel = ({
           <Field className="gap-8">
             <div className="flex items-baseline justify-between gap-8">
               <FieldLabel htmlFor="circleRad">Radius of the disc</FieldLabel>
-              <Input
-                type="number"
+              <ScrubbableInput
                 id="circleRad"
                 value={circleRad}
-                onChange={(event: React.ChangeEvent<HTMLInputElement>) => {
-                  setCircleRad(Number(event?.target?.value));
-                }}
+                onValueChange={setCircleRad}
+                min={1}
+                max={800}
                 className="h-auto w-32 [appearance:textfield] border-transparent bg-transparent! pr-3 pl-3 text-right text-4xl! font-bold tracking-tighter shadow-none focus-visible:border-transparent focus-visible:ring-0 [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
               />
             </div>
@@ -59,13 +63,12 @@ export const PropertiesPanel = ({
           <Field className="gap-4">
             <div className="flex items-baseline justify-between gap-8">
               <FieldLabel htmlFor="circleGap">Gap between discs</FieldLabel>
-              <Input
-                type="number"
+              <ScrubbableInput
                 id="circleGap"
                 value={circleGap}
-                onChange={(event: React.ChangeEvent<HTMLInputElement>) => {
-                  setCircleGap(Number(event?.target?.value));
-                }}
+                onValueChange={setCircleGap}
+                min={-800}
+                max={800}
                 className="h-auto w-32 [appearance:textfield] border-transparent bg-transparent! pr-3 pl-3 text-right text-4xl! font-bold tracking-tighter shadow-none focus-visible:border-transparent focus-visible:ring-0 [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
               />
             </div>
@@ -79,6 +82,25 @@ export const PropertiesPanel = ({
                 step={1}
                 onValueChange={(val) => setCircleGap(val[0])}
               />
+            </div>
+          </Field>
+          <Field className="gap-2 flex flex-col items-center">
+            <div className="flex items-baseline justify-between gap-8 w-full">
+              <FieldLabel htmlFor="angle">Rotation angle</FieldLabel>
+              <div className="relative flex items-center">
+                <ScrubbableInput
+                  id="angle"
+                  value={angle}
+                  onValueChange={setAngle}
+                  min={0}
+                  max={360}
+                  className="h-auto w-32 [appearance:textfield] border-transparent bg-transparent! pr-6 pl-3 text-right text-4xl! font-bold tracking-tighter shadow-none focus-visible:border-transparent focus-visible:ring-0 [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
+                />
+                <span className="absolute right-0 top-1/2 -translate-y-1/2 text-4xl font-bold opacity-70 pointer-events-none">°</span>
+              </div>
+            </div>
+            <div className="flex justify-center w-full">
+              <Knob value={angle} onValueChange={setAngle} />
             </div>
           </Field>
         </FieldGroup>
