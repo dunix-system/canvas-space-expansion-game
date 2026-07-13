@@ -45,20 +45,26 @@ const CanvasComponent: React.FC<CanvasComponentProps> = ({ circleGap, circleRad 
     const canvas = canvasRef.current;
     if (!canvas) return;
 
-    canvas.width = canvas.offsetWidth;
-    canvas.height = canvas.offsetHeight;
+    const logicalWidth = canvas.offsetWidth;
+    const logicalHeight = canvas.offsetHeight;
+    const dpr = window.devicePixelRatio || 1;
+
+    canvas.width = logicalWidth * dpr;
+    canvas.height = logicalHeight * dpr;
 
     const ctx = canvas.getContext("2d");
     if (!ctx) return;
 
-    const centerX = canvas.width / 2;
-    const centerY = canvas.height / 2;
+    ctx.scale(dpr, dpr);
+
+    const centerX = logicalWidth / 2;
+    const centerY = logicalHeight / 2;
 
     const x = mouseOffsetRef.current.x + defCanvasCoordsRef.current.x + centerX - circleRad;
     const y = mouseOffsetRef.current.y + defCanvasCoordsRef.current.y + centerY - circleRad;
 
     ctx.fillStyle = CANVAS_COLOR_BG;
-    ctx.fillRect(0, 0, canvas.width, canvas.height);
+    ctx.fillRect(0, 0, logicalWidth, logicalHeight);
 
     ctx.translate(x, y);
 
@@ -67,8 +73,8 @@ const CanvasComponent: React.FC<CanvasComponentProps> = ({ circleGap, circleRad 
     if (Math.abs(circleExt) < 5) return; // Prevent infinite loops and browser freeze
 
     const step = Math.abs(circleExt);
-    const cols = Math.floor((canvas.width + circleGap) / step);
-    const rows = Math.floor((canvas.height + circleGap) / step);
+    const cols = Math.floor((logicalWidth + circleGap) / step);
+    const rows = Math.floor((logicalHeight + circleGap) / step);
 
     const startCol = Math.floor(-x / step) - 1;
     const startRow = Math.floor(-y / step) - 1;
