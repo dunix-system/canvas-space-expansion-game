@@ -25,7 +25,6 @@ const CanvasComponent: React.FC<CanvasComponentProps> = ({ circleGap, circleRad,
   const velocityRef = useRef<{ u: number; v: number }>({ u: 0, v: 0 });
   const isFloatingAnimActiveRef = useRef<boolean>(true);
   const rafRef = useRef<number | null>(null);
-  const fadeCounterRef = useRef<number>(0);
   const prevCameraRef = useRef<{ u: number; v: number }>({ u: 0, v: 0 });
 
   const propsRef = useRef({ circleRad, circleGap, angle, glowEnabled, glowIntensity, glowStrength, trailEnabled, inertiaEnabled, joinMovementEnabled });
@@ -60,17 +59,7 @@ const CanvasComponent: React.FC<CanvasComponentProps> = ({ circleGap, circleRad,
     const centerX = logicalWidth / 2;
     const centerY = logicalHeight / 2;
 
-    const isInertiaActive = Math.abs(velocityRef.current.u) > 0.0001 || Math.abs(velocityRef.current.v) > 0.0001;
-    let doFade = false;
-    if (currentMouseRef.current || isInertiaActive) {
-      fadeCounterRef.current = 40; // ~0.6 seconds fade out
-      doFade = true;
-    } else if (fadeCounterRef.current > 0) {
-      fadeCounterRef.current -= 1;
-      doFade = true;
-    }
-
-    if (resized || !trailEnabled || !doFade) {
+    if (resized || !trailEnabled) {
       ctx.fillStyle = CANVAS_COLOR_BG;
     } else {
       ctx.fillStyle = "rgba(0, 0, 0, 0.15)";
@@ -132,7 +121,7 @@ const CanvasComponent: React.FC<CanvasComponentProps> = ({ circleGap, circleRad,
 
     if (glowEnabled) {
       ctx.shadowColor = CIRCLE_COLOR;
-      ctx.globalCompositeOperation = currentMouseRef.current ? "lighter" : "source-over";
+      ctx.globalCompositeOperation = "lighter";
       
       for (let i = glowStrength; i > 0; i--) {
         ctx.shadowBlur = (glowIntensity / glowStrength) * i;
