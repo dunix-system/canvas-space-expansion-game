@@ -1,10 +1,9 @@
 import clsx from "clsx";
-import { useRef, useEffect } from "react";
+import { useRef, useEffect, useCallback } from "react";
 
 const CANVAS_COLOR_BG = "#000";
 const CIRCLE_COLOR = "#ffffff";
-// const circleRad = 40;
-// const circleGap = 30;
+const SPEED_FACTOR = 0.2;
 
 interface CanvasComponentProps {
   circleRad: number;
@@ -15,36 +14,21 @@ interface CanvasComponentProps {
 const CanvasComponent: React.FC<CanvasComponentProps> = ({ circleGap, circleRad, angle }) => {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const cameraRef = useRef<{ u: number; v: number }>({ u: 0, v: 0 });
-  const startCameraRef = useRef<{ u: number; v: number }>({ u: 0, v: 0 });
   const startMouseRef = useRef<{ x: number; y: number }>({ x: 0, y: 0 });
+  const currentMouseRef = useRef<{ x: number; y: number } | null>(null);
+  const rafRef = useRef<number | null>(null);
 
-  const calculateMouseOffset = (event: PointerEvent) => {
-    const screenDx = event.pageX - startMouseRef.current.x;
-    const screenDy = event.pageY - startMouseRef.current.y;
-    
-    const angleRad = (angle * Math.PI) / 180;
-    const cosA = Math.cos(angleRad);
-    const sinA = Math.sin(angleRad);
-    
-    const worldDx = screenDx * cosA + screenDy * sinA;
-    const worldDy = -screenDx * sinA + screenDy * cosA;
-    
-    const circleDiam = circleRad * 2;
-    const circleExt = circleDiam + circleGap;
-    if (Math.abs(circleExt) < 5) return;
-    const step = Math.abs(circleExt);
+  const propsRef = useRef({ circleRad, circleGap, angle });
 
-    cameraRef.current = {
-      u: startCameraRef.current.u + worldDx / step,
-      v: startCameraRef.current.v + worldDy / step,
-    };
+  useEffect(() => {
+    propsRef.current = { circleRad, circleGap, angle };
+  }, [circleRad, circleGap, angle]);
 
-    requestAnimationFrame(draw);
-  };
-
-  const draw = () => {
+  const draw = useCallback(() => {
     const canvas = canvasRef.current;
     if (!canvas) return;
+
+    const { circleRad, circleGap, angle } = propsRef.current;
 
     const logicalWidth = canvas.offsetWidth;
     const logicalHeight = canvas.offsetHeight;
@@ -80,9 +64,6 @@ const CanvasComponent: React.FC<CanvasComponentProps> = ({ circleGap, circleRad,
     ctx.translate(-camWorldX, -camWorldY);
 
     const diagonal = Math.sqrt(logicalWidth * logicalWidth + logicalHeight * logicalHeight);
-    const cols = Math.floor(diagonal / step);
-    const rows = Math.floor(diagonal / step);
-
     const startCol = Math.floor((camWorldX - diagonal / 2) / step) - 1;
     const startRow = Math.floor((camWorldY - diagonal / 2) / step) - 1;
     const endCol = Math.floor((camWorldX + diagonal / 2) / step) + 1;
@@ -96,58 +77,98 @@ const CanvasComponent: React.FC<CanvasComponentProps> = ({ circleGap, circleRad,
         ctx.fill();
       }
     }
-  };
+  }, []);
 
-  const onPointerDown = (event: PointerEvent) => {
-    const canvas = canvasRef.current;
-    if (!canvas) return;
+  const updateMovement = useCallback(
+    function loop() {
+      if (!currentMouseRef.current) return;
 
-    canvas.setPointerCapture(event.pointerId);
+      const screenDx = currentMouseRef.current.x - startMouseRef.current.x;
+      const screenDy = currentMouseRef.current.y - startMouseRef.current.y;
 
-    startMouseRef.current = { x: event.pageX, y: event.pageY };
-    startCameraRef.current = { u: cameraRef.current.u, v: cameraRef.current.v };
-    
-    canvas.addEventListener("pointermove", onPointerMove);
-    canvas.addEventListener("pointerup", onPointerUp);
-    canvas.addEventListener("pointercancel", onPointerUp); // Catch edge cases where the browser forcibly stops the drag
-  };
+      const { angle, circleRad, circleGap } = propsRef.current;
 
-  const onPointerMove = (event: PointerEvent) => {
-    calculateMouseOffset(event);
-  };
+      const angleRad = (angle * Math.PI) / 180;
+      const cosA = Math.cos(angleRad);
+      const sinA = Math.sin(angleRad);
 
-  const onPointerUp = (event: PointerEvent) => {
-    const canvas = canvasRef.current;
-    if (!canvas) return;
+      const worldDx = screenDx * cosA + screenDy * sinA;
+      const worldDy = -screenDx * sinA + screenDy * cosA;
 
-    canvas.releasePointerCapture(event.pointerId);
+      const circleDiam = circleRad * 2;
+      const circleExt = circleDiam + circleGap;
+      if (Math.abs(circleExt) >= 5) {
+        const step = Math.abs(circleExt);
 
-    canvas.removeEventListener("pointermove", onPointerMove);
-    canvas.removeEventListener("pointerup", onPointerUp);
-    canvas.removeEventListener("pointercancel", onPointerUp);
+        cameraRef.current = {
+          u: cameraRef.current.u + (worldDx * SPEED_FACTOR) / step,
+          v: cameraRef.current.v + (worldDy * SPEED_FACTOR) / step,
+        };
+        draw();
+      }
 
-    calculateMouseOffset(event);
-  };
+      rafRef.current = requestAnimationFrame(loop);
+    },
+    [draw],
+  );
 
   useEffect(() => {
     draw();
-    window.addEventListener("resize", draw);
+  }, [draw, circleRad, circleGap, angle]);
 
+  useEffect(() => {
     const canvas = canvasRef.current;
-    if (canvas) {
-      canvas.addEventListener("pointerdown", onPointerDown);
-    }
+    if (!canvas) return;
+
+    const onPointerMove = (event: PointerEvent) => {
+      currentMouseRef.current = { x: event.pageX, y: event.pageY };
+    };
+
+    const onPointerUp = (event: PointerEvent) => {
+      canvas.releasePointerCapture(event.pointerId);
+
+      canvas.removeEventListener("pointermove", onPointerMove);
+      canvas.removeEventListener("pointerup", onPointerUp);
+      canvas.removeEventListener("pointercancel", onPointerUp);
+
+      currentMouseRef.current = null;
+      if (rafRef.current !== null) {
+        cancelAnimationFrame(rafRef.current);
+        rafRef.current = null;
+      }
+    };
+
+    const onPointerDown = (event: PointerEvent) => {
+      canvas.setPointerCapture(event.pointerId);
+
+      startMouseRef.current = { x: event.pageX, y: event.pageY };
+      currentMouseRef.current = { x: event.pageX, y: event.pageY };
+
+      canvas.addEventListener("pointermove", onPointerMove);
+      canvas.addEventListener("pointerup", onPointerUp);
+      canvas.addEventListener("pointercancel", onPointerUp);
+
+      if (rafRef.current === null) {
+        rafRef.current = requestAnimationFrame(updateMovement);
+      }
+    };
+
+    canvas.addEventListener("pointerdown", onPointerDown);
+    window.addEventListener("resize", draw);
 
     return () => {
       window.removeEventListener("resize", draw);
-      if (canvas) {
-        canvas.removeEventListener("pointerdown", onPointerDown);
-        canvas.removeEventListener("pointermove", onPointerMove);
-        canvas.removeEventListener("pointerup", onPointerUp);
-        canvas.removeEventListener("pointercancel", onPointerUp);
+      canvas.removeEventListener("pointerdown", onPointerDown);
+      canvas.removeEventListener("pointermove", onPointerMove);
+      canvas.removeEventListener("pointerup", onPointerUp);
+      canvas.removeEventListener("pointercancel", onPointerUp);
+
+      if (rafRef.current !== null) {
+        cancelAnimationFrame(rafRef.current);
+        rafRef.current = null;
       }
     };
-  }, [circleRad, circleGap, angle]);
+  }, [draw, updateMovement]);
 
   return <canvas ref={canvasRef} className={clsx("h-full w-full touch-none")} />;
 };
