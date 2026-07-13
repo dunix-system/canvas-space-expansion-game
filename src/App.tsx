@@ -4,8 +4,9 @@ import { AppSidebar } from "./components/features/AppSidebar";
 import { SidebarProvider } from "./components/ui/sidebar";
 import { PropertiesPanel } from "./components/features/PropertiesPanel";
 import { EffectsPanel } from "./components/features/EffectsPanel";
+import { RandomizersPanel } from "./components/features/RandomizersPanel";
 
-export type ActivePanel = "properties" | "effects" | null;
+export type ActivePanel = "properties" | "effects" | "randomizers" | null;
 
 function App() {
   const [circleRad, setCircleRad] = useState(42);
@@ -18,6 +19,11 @@ function App() {
   const [trailEnabled, setTrailEnabled] = useState(false);
   const [inertiaEnabled, setInertiaEnabled] = useState(true);
   const [joinMovementEnabled, setJoinMovementEnabled] = useState(true);
+
+  const [randomizePlacementEnabled, setRandomizePlacementEnabled] = useState(false);
+  const [placementRandomness, setPlacementRandomness] = useState(5);
+  const [randomizeSizeEnabled, setRandomizeSizeEnabled] = useState(false);
+  const [sizeRandomness, setSizeRandomness] = useState(5);
 
   const [activePanel, setActivePanel] = useState<ActivePanel>(null);
 
@@ -34,6 +40,10 @@ function App() {
           trailEnabled={trailEnabled}
           inertiaEnabled={inertiaEnabled}
           joinMovementEnabled={joinMovementEnabled}
+          randomizePlacementEnabled={randomizePlacementEnabled}
+          placementRandomness={placementRandomness}
+          randomizeSizeEnabled={randomizeSizeEnabled}
+          sizeRandomness={sizeRandomness}
         />
       </div>
 
@@ -67,6 +77,20 @@ function App() {
               setInertiaEnabled={setInertiaEnabled}
               joinMovementEnabled={joinMovementEnabled}
               setJoinMovementEnabled={setJoinMovementEnabled}
+              onClose={() => setActivePanel(null)}
+            />
+          )}
+
+          {activePanel === "randomizers" && (
+            <RandomizersPanel
+              randomizePlacementEnabled={randomizePlacementEnabled}
+              setRandomizePlacementEnabled={setRandomizePlacementEnabled}
+              placementRandomness={placementRandomness}
+              setPlacementRandomness={setPlacementRandomness}
+              randomizeSizeEnabled={randomizeSizeEnabled}
+              setRandomizeSizeEnabled={setRandomizeSizeEnabled}
+              sizeRandomness={sizeRandomness}
+              setSizeRandomness={setSizeRandomness}
               onClose={() => setActivePanel(null)}
             />
           )}

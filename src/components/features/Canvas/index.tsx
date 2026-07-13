@@ -15,9 +15,13 @@ interface CanvasComponentProps {
   trailEnabled: boolean;
   inertiaEnabled: boolean;
   joinMovementEnabled: boolean;
+  randomizePlacementEnabled: boolean;
+  placementRandomness: number;
+  randomizeSizeEnabled: boolean;
+  sizeRandomness: number;
 }
 
-const CanvasComponent: React.FC<CanvasComponentProps> = ({ circleGap, circleRad, angle, glowEnabled, glowIntensity, glowStrength, trailEnabled, inertiaEnabled, joinMovementEnabled }) => {
+const CanvasComponent: React.FC<CanvasComponentProps> = ({ circleGap, circleRad, angle, glowEnabled, glowIntensity, glowStrength, trailEnabled, inertiaEnabled, joinMovementEnabled, randomizePlacementEnabled, placementRandomness, randomizeSizeEnabled, sizeRandomness }) => {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const cameraRef = useRef<{ u: number; v: number }>({ u: 0, v: 0 });
   const startMouseRef = useRef<{ x: number; y: number }>({ x: 0, y: 0 });
@@ -27,17 +31,17 @@ const CanvasComponent: React.FC<CanvasComponentProps> = ({ circleGap, circleRad,
   const rafRef = useRef<number | null>(null);
   const prevCameraRef = useRef<{ u: number; v: number }>({ u: 0, v: 0 });
 
-  const propsRef = useRef({ circleRad, circleGap, angle, glowEnabled, glowIntensity, glowStrength, trailEnabled, inertiaEnabled, joinMovementEnabled });
+  const propsRef = useRef({ circleRad, circleGap, angle, glowEnabled, glowIntensity, glowStrength, trailEnabled, inertiaEnabled, joinMovementEnabled, randomizePlacementEnabled, placementRandomness, randomizeSizeEnabled, sizeRandomness });
 
   useEffect(() => {
-    propsRef.current = { circleRad, circleGap, angle, glowEnabled, glowIntensity, glowStrength, trailEnabled, inertiaEnabled, joinMovementEnabled };
-  }, [circleRad, circleGap, angle, glowEnabled, glowIntensity, glowStrength, trailEnabled, inertiaEnabled, joinMovementEnabled]);
+    propsRef.current = { circleRad, circleGap, angle, glowEnabled, glowIntensity, glowStrength, trailEnabled, inertiaEnabled, joinMovementEnabled, randomizePlacementEnabled, placementRandomness, randomizeSizeEnabled, sizeRandomness };
+  }, [circleRad, circleGap, angle, glowEnabled, glowIntensity, glowStrength, trailEnabled, inertiaEnabled, joinMovementEnabled, randomizePlacementEnabled, placementRandomness, randomizeSizeEnabled, sizeRandomness]);
 
   const draw = useCallback(() => {
     const canvas = canvasRef.current;
     if (!canvas) return;
 
-    const { circleRad, circleGap, angle, glowEnabled, glowIntensity, glowStrength, trailEnabled } = propsRef.current;
+    const { circleRad, circleGap, angle, glowEnabled, glowIntensity, glowStrength, trailEnabled, randomizePlacementEnabled, placementRandomness, randomizeSizeEnabled, sizeRandomness } = propsRef.current;
 
     const logicalWidth = canvas.offsetWidth;
     const logicalHeight = canvas.offsetHeight;
@@ -96,28 +100,79 @@ const CanvasComponent: React.FC<CanvasComponentProps> = ({ circleGap, circleRad,
     const endCol = Math.floor((camWorldX + diagonal / 2) / step) + 1;
     const endRow = Math.floor((camWorldY + diagonal / 2) / step) + 1;
 
-    ctx.beginPath();
+    const disks: { cx: number; cy: number; actualRad: number }[] = [];
+
     for (let rowNum = startRow; rowNum <= endRow; rowNum += 1) {
       for (let colNum = startCol; colNum <= endCol; colNum += 1) {
-        const cx = step * colNum;
-        const cy = step * rowNum;
-        if (shouldDrawLines) {
-          ctx.moveTo(cx + dx, cy + dy);
-          ctx.lineTo(cx, cy);
-        } else {
-          ctx.moveTo(cx + circleRad, cy);
-          ctx.arc(cx, cy, circleRad, 0, 2 * Math.PI);
+        let cx = step * colNum;
+        let cy = step * rowNum;
+        let actualRad = circleRad;
+
+        if (randomizePlacementEnabled || randomizeSizeEnabled) {
+          const rand1 = Math.sin(rowNum * 12.9898 + colNum * 78.233) * 43758.5453;
+          const randFrac1 = rand1 - Math.floor(rand1);
+          const offset1 = randFrac1 * 2 - 1;
+
+          const rand2 = Math.cos(rowNum * 39.346 + colNum * 53.483) * 32832.1234;
+          const randFrac2 = rand2 - Math.floor(rand2);
+          const offset2 = randFrac2 * 2 - 1;
+
+          if (randomizePlacementEnabled) {
+            cx += offset1 * placementRandomness;
+            cy += offset2 * placementRandomness;
+          }
+
+          if (randomizeSizeEnabled) {
+            // Calculate a scale factor based on sizeRandomness (max 50)
+            const factor = 1 + Math.abs(offset1) * (sizeRandomness / 10);
+            if (offset1 > 0) {
+              actualRad = circleRad * factor;
+            } else {
+              actualRad = Math.max(1, circleRad / factor);
+            }
+          }
         }
+        
+        disks.push({ cx, cy, actualRad });
       }
     }
 
-    if (shouldDrawLines) {
-      ctx.lineWidth = circleRad * 2;
-      ctx.lineCap = "round";
-      ctx.strokeStyle = CIRCLE_COLOR;
-    } else {
-      ctx.fillStyle = CIRCLE_COLOR;
-    }
+    const drawPaths = () => {
+      if (shouldDrawLines) {
+        if (randomizeSizeEnabled) {
+          ctx.lineCap = "round";
+          ctx.strokeStyle = CIRCLE_COLOR;
+          for (let i = 0; i < disks.length; i++) {
+            const d = disks[i];
+            ctx.beginPath();
+            ctx.lineWidth = d.actualRad * 2;
+            ctx.moveTo(d.cx + dx, d.cy + dy);
+            ctx.lineTo(d.cx, d.cy);
+            ctx.stroke();
+          }
+        } else {
+          ctx.beginPath();
+          for (let i = 0; i < disks.length; i++) {
+            const d = disks[i];
+            ctx.moveTo(d.cx + dx, d.cy + dy);
+            ctx.lineTo(d.cx, d.cy);
+          }
+          ctx.lineWidth = circleRad * 2;
+          ctx.lineCap = "round";
+          ctx.strokeStyle = CIRCLE_COLOR;
+          ctx.stroke();
+        }
+      } else {
+        ctx.beginPath();
+        for (let i = 0; i < disks.length; i++) {
+          const d = disks[i];
+          ctx.moveTo(d.cx + d.actualRad, d.cy);
+          ctx.arc(d.cx, d.cy, d.actualRad, 0, 2 * Math.PI);
+        }
+        ctx.fillStyle = CIRCLE_COLOR;
+        ctx.fill();
+      }
+    };
 
     if (glowEnabled) {
       ctx.shadowColor = CIRCLE_COLOR;
@@ -125,22 +180,14 @@ const CanvasComponent: React.FC<CanvasComponentProps> = ({ circleGap, circleRad,
       
       for (let i = glowStrength; i > 0; i--) {
         ctx.shadowBlur = (glowIntensity / glowStrength) * i;
-        if (shouldDrawLines) {
-          ctx.stroke();
-        } else {
-          ctx.fill();
-        }
+        drawPaths();
       }
       
       ctx.globalCompositeOperation = "source-over";
     } else {
       ctx.shadowBlur = 0;
       ctx.shadowColor = "transparent";
-      if (shouldDrawLines) {
-        ctx.stroke();
-      } else {
-        ctx.fill();
-      }
+      drawPaths();
     }
 
     prevCameraRef.current = { u: cameraRef.current.u, v: cameraRef.current.v };
