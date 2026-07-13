@@ -12,43 +12,63 @@ interface CanvasComponentProps {
   glowEnabled: boolean;
   glowIntensity: number;
   glowStrength: number;
+  trailEnabled: boolean;
 }
 
-const CanvasComponent: React.FC<CanvasComponentProps> = ({ circleGap, circleRad, angle, glowEnabled, glowIntensity, glowStrength }) => {
+const CanvasComponent: React.FC<CanvasComponentProps> = ({ circleGap, circleRad, angle, glowEnabled, glowIntensity, glowStrength, trailEnabled }) => {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const cameraRef = useRef<{ u: number; v: number }>({ u: 0, v: 0 });
   const startMouseRef = useRef<{ x: number; y: number }>({ x: 0, y: 0 });
   const currentMouseRef = useRef<{ x: number; y: number } | null>(null);
   const rafRef = useRef<number | null>(null);
+  const fadeCounterRef = useRef<number>(0);
 
-  const propsRef = useRef({ circleRad, circleGap, angle, glowEnabled, glowIntensity, glowStrength });
+  const propsRef = useRef({ circleRad, circleGap, angle, glowEnabled, glowIntensity, glowStrength, trailEnabled });
 
   useEffect(() => {
-    propsRef.current = { circleRad, circleGap, angle, glowEnabled, glowIntensity, glowStrength };
-  }, [circleRad, circleGap, angle, glowEnabled, glowIntensity, glowStrength]);
+    propsRef.current = { circleRad, circleGap, angle, glowEnabled, glowIntensity, glowStrength, trailEnabled };
+  }, [circleRad, circleGap, angle, glowEnabled, glowIntensity, glowStrength, trailEnabled]);
 
   const draw = useCallback(() => {
     const canvas = canvasRef.current;
     if (!canvas) return;
 
-    const { circleRad, circleGap, angle, glowEnabled, glowIntensity, glowStrength } = propsRef.current;
+    const { circleRad, circleGap, angle, glowEnabled, glowIntensity, glowStrength, trailEnabled } = propsRef.current;
 
     const logicalWidth = canvas.offsetWidth;
     const logicalHeight = canvas.offsetHeight;
     const dpr = window.devicePixelRatio || 1;
 
-    canvas.width = logicalWidth * dpr;
-    canvas.height = logicalHeight * dpr;
-
     const ctx = canvas.getContext("2d");
     if (!ctx) return;
 
+    let resized = false;
+    if (canvas.width !== Math.floor(logicalWidth * dpr) || canvas.height !== Math.floor(logicalHeight * dpr)) {
+      canvas.width = Math.floor(logicalWidth * dpr);
+      canvas.height = Math.floor(logicalHeight * dpr);
+      resized = true;
+    }
+
+    ctx.save();
     ctx.scale(dpr, dpr);
 
     const centerX = logicalWidth / 2;
     const centerY = logicalHeight / 2;
 
-    ctx.fillStyle = CANVAS_COLOR_BG;
+    let doFade = false;
+    if (currentMouseRef.current) {
+      fadeCounterRef.current = 40; // ~0.6 seconds fade out
+      doFade = true;
+    } else if (fadeCounterRef.current > 0) {
+      fadeCounterRef.current -= 1;
+      doFade = true;
+    }
+
+    if (resized || !trailEnabled || !doFade) {
+      ctx.fillStyle = CANVAS_COLOR_BG;
+    } else {
+      ctx.fillStyle = "rgba(0, 0, 0, 0.15)";
+    }
     ctx.fillRect(0, 0, logicalWidth, logicalHeight);
 
     ctx.translate(centerX, centerY);
@@ -85,7 +105,7 @@ const CanvasComponent: React.FC<CanvasComponentProps> = ({ circleGap, circleRad,
 
     if (glowEnabled) {
       ctx.shadowColor = CIRCLE_COLOR;
-      ctx.globalCompositeOperation = "lighter";
+      ctx.globalCompositeOperation = currentMouseRef.current ? "lighter" : "source-over";
       
       for (let i = glowStrength; i > 0; i--) {
         ctx.shadowBlur = (glowIntensity / glowStrength) * i;
@@ -98,34 +118,37 @@ const CanvasComponent: React.FC<CanvasComponentProps> = ({ circleGap, circleRad,
       ctx.shadowColor = "transparent";
       ctx.fill();
     }
+
+    ctx.restore();
   }, []);
 
   const updateMovement = useCallback(
     function loop() {
-      if (!currentMouseRef.current) return;
+      draw();
 
-      const screenDx = currentMouseRef.current.x - startMouseRef.current.x;
-      const screenDy = currentMouseRef.current.y - startMouseRef.current.y;
+      if (currentMouseRef.current) {
+        const screenDx = currentMouseRef.current.x - startMouseRef.current.x;
+        const screenDy = currentMouseRef.current.y - startMouseRef.current.y;
 
-      const { angle, circleRad, circleGap } = propsRef.current;
+        const { angle, circleRad, circleGap } = propsRef.current;
 
-      const angleRad = (angle * Math.PI) / 180;
-      const cosA = Math.cos(angleRad);
-      const sinA = Math.sin(angleRad);
+        const angleRad = (angle * Math.PI) / 180;
+        const cosA = Math.cos(angleRad);
+        const sinA = Math.sin(angleRad);
 
-      const worldDx = screenDx * cosA + screenDy * sinA;
-      const worldDy = -screenDx * sinA + screenDy * cosA;
+        const worldDx = screenDx * cosA + screenDy * sinA;
+        const worldDy = -screenDx * sinA + screenDy * cosA;
 
-      const circleDiam = circleRad * 2;
-      const circleExt = circleDiam + circleGap;
-      if (Math.abs(circleExt) >= 5) {
-        const step = Math.abs(circleExt);
+        const circleDiam = circleRad * 2;
+        const circleExt = circleDiam + circleGap;
+        if (Math.abs(circleExt) >= 5) {
+          const step = Math.abs(circleExt);
 
-        cameraRef.current = {
-          u: cameraRef.current.u + (worldDx * SPEED_FACTOR) / step,
-          v: cameraRef.current.v + (worldDy * SPEED_FACTOR) / step,
-        };
-        draw();
+          cameraRef.current = {
+            u: cameraRef.current.u + (worldDx * SPEED_FACTOR) / step,
+            v: cameraRef.current.v + (worldDy * SPEED_FACTOR) / step,
+          };
+        }
       }
 
       rafRef.current = requestAnimationFrame(loop);
@@ -134,12 +157,12 @@ const CanvasComponent: React.FC<CanvasComponentProps> = ({ circleGap, circleRad,
   );
 
   useEffect(() => {
-    draw();
-  }, [draw, circleRad, circleGap, angle, glowEnabled, glowIntensity, glowStrength]);
-
-  useEffect(() => {
     const canvas = canvasRef.current;
     if (!canvas) return;
+
+    if (rafRef.current === null) {
+      rafRef.current = requestAnimationFrame(updateMovement);
+    }
 
     const onPointerMove = (event: PointerEvent) => {
       currentMouseRef.current = { x: event.pageX, y: event.pageY };
@@ -153,10 +176,6 @@ const CanvasComponent: React.FC<CanvasComponentProps> = ({ circleGap, circleRad,
       canvas.removeEventListener("pointercancel", onPointerUp);
 
       currentMouseRef.current = null;
-      if (rafRef.current !== null) {
-        cancelAnimationFrame(rafRef.current);
-        rafRef.current = null;
-      }
     };
 
     const onPointerDown = (event: PointerEvent) => {
@@ -168,17 +187,11 @@ const CanvasComponent: React.FC<CanvasComponentProps> = ({ circleGap, circleRad,
       canvas.addEventListener("pointermove", onPointerMove);
       canvas.addEventListener("pointerup", onPointerUp);
       canvas.addEventListener("pointercancel", onPointerUp);
-
-      if (rafRef.current === null) {
-        rafRef.current = requestAnimationFrame(updateMovement);
-      }
     };
 
     canvas.addEventListener("pointerdown", onPointerDown);
-    window.addEventListener("resize", draw);
 
     return () => {
-      window.removeEventListener("resize", draw);
       canvas.removeEventListener("pointerdown", onPointerDown);
       canvas.removeEventListener("pointermove", onPointerMove);
       canvas.removeEventListener("pointerup", onPointerUp);
@@ -189,7 +202,7 @@ const CanvasComponent: React.FC<CanvasComponentProps> = ({ circleGap, circleRad,
         rafRef.current = null;
       }
     };
-  }, [draw, updateMovement]);
+  }, [updateMovement]);
 
   return <canvas ref={canvasRef} className={clsx("h-full w-full touch-none")} />;
 };

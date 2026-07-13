@@ -12,6 +12,8 @@ interface EffectsPanelProps {
   setGlowIntensity: Dispatch<SetStateAction<number>>;
   glowStrength: number;
   setGlowStrength: Dispatch<SetStateAction<number>>;
+  trailEnabled: boolean;
+  setTrailEnabled: Dispatch<SetStateAction<boolean>>;
   onClose: () => void;
 }
 
@@ -22,6 +24,8 @@ export const EffectsPanel = ({
   setGlowIntensity, 
   glowStrength,
   setGlowStrength,
+  trailEnabled,
+  setTrailEnabled,
   onClose 
 }: EffectsPanelProps) => {
   return (
@@ -76,6 +80,16 @@ export const EffectsPanel = ({
                 />
               </div>
             )}
+          </Field>
+          <Field className="gap-4">
+            <div className="flex items-center space-x-2">
+              <Checkbox 
+                id="trailEnabled" 
+                checked={trailEnabled} 
+                onCheckedChange={(checked) => setTrailEnabled(!!checked)} 
+              />
+              <FieldLabel htmlFor="trailEnabled" className="cursor-pointer text-base">Enable Motion Blur (Trail)</FieldLabel>
+            </div>
           </Field>
         </FieldGroup>
       </div>

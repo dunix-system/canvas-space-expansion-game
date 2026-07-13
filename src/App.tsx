@@ -15,6 +15,7 @@ function App() {
   const [glowEnabled, setGlowEnabled] = useState(false);
   const [glowIntensity, setGlowIntensity] = useState(15);
   const [glowStrength, setGlowStrength] = useState(1);
+  const [trailEnabled, setTrailEnabled] = useState(false);
   
   const [activePanel, setActivePanel] = useState<ActivePanel>(null);
 
@@ -28,6 +29,7 @@ function App() {
           glowEnabled={glowEnabled}
           glowIntensity={glowIntensity}
           glowStrength={glowStrength}
+          trailEnabled={trailEnabled}
         />
       </div>
 
@@ -55,6 +57,8 @@ function App() {
               setGlowIntensity={setGlowIntensity}
               glowStrength={glowStrength}
               setGlowStrength={setGlowStrength}
+              trailEnabled={trailEnabled}
+              setTrailEnabled={setTrailEnabled}
               onClose={() => setActivePanel(null)} 
             />
           )}
