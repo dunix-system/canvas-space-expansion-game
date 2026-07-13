@@ -9,7 +9,14 @@ import {
   SidebarTrigger,
   useSidebar,
 } from "@/components/ui/sidebar";
-import { PlanetIcon, SlidersHorizontal, Sparkle, SidebarSimple } from "@phosphor-icons/react";
+import {
+  PlanetIcon,
+  SlidersHorizontal,
+  Sparkle,
+  SidebarSimple,
+  CaretRight,
+  CaretLeft,
+} from "@phosphor-icons/react";
 
 interface AppSidebarProps {
   activePanel: "properties" | "effects" | null;
@@ -17,8 +24,59 @@ interface AppSidebarProps {
 }
 
 export const AppSidebar = ({ activePanel, setActivePanel }: AppSidebarProps) => {
-  const { state, toggleSidebar } = useSidebar();
+  const { state, toggleSidebar, isMobile } = useSidebar();
   const [isHovered, setIsHovered] = useState(false);
+  const [isMobileExpanded, setIsMobileExpanded] = useState(false);
+
+  if (isMobile) {
+    return (
+      <div className="bg-sidebar border-sidebar-border pointer-events-auto absolute top-0 right-0 left-0 z-40 flex h-14 items-center justify-between border-b px-3 shadow-sm sm:px-2">
+        <div className="no-scrollbar flex h-full w-full items-center gap-0 overflow-x-auto">
+          <div
+            className={`flex h-full items-center transition-all duration-300 ease-in-out ${isMobileExpanded ? "gap-1" : "gap-0"} mr-1 shrink-0 px-1`}
+          >
+            <PlanetIcon size={32} className="text-primary shrink-0" />
+            <span
+              className={`overflow-hidden text-lg font-semibold tracking-tight whitespace-nowrap transition-all duration-300 ease-in-out ${isMobileExpanded ? "max-w-[120px] opacity-100" : "max-w-0 opacity-0"}`}
+            >
+              spaceexp
+            </span>
+          </div>
+
+          <button
+            onClick={() => setActivePanel(activePanel === "properties" ? null : "properties")}
+            className={`flex h-full items-center transition-all duration-300 ease-in-out ${isMobileExpanded ? "gap-1" : "gap-0"} shrink-0 rounded-none border-none px-3 ${activePanel === "properties" ? "bg-sidebar-accent text-sidebar-accent-foreground font-medium" : "text-sidebar-foreground hover:bg-sidebar-accent/50"}`}
+          >
+            <SlidersHorizontal size={28} className="shrink-0" />
+            <span
+              className={`overflow-hidden text-sm font-medium whitespace-nowrap transition-all duration-300 ease-in-out ${isMobileExpanded ? "max-w-[100px] opacity-100" : "max-w-0 opacity-0"}`}
+            >
+              Properties
+            </span>
+          </button>
+
+          <button
+            onClick={() => setActivePanel(activePanel === "effects" ? null : "effects")}
+            className={`flex h-full items-center transition-all duration-300 ease-in-out ${isMobileExpanded ? "gap-1" : "gap-0"} shrink-0 rounded-none border-none px-3 ${activePanel === "effects" ? "bg-sidebar-accent text-sidebar-accent-foreground font-medium" : "text-sidebar-foreground hover:bg-sidebar-accent/50"}`}
+          >
+            <Sparkle size={28} className="shrink-0" />
+            <span
+              className={`overflow-hidden text-sm font-medium whitespace-nowrap transition-all duration-300 ease-in-out ${isMobileExpanded ? "max-w-[100px] opacity-100" : "max-w-0 opacity-0"}`}
+            >
+              Effects
+            </span>
+          </button>
+        </div>
+
+        <button
+          onClick={() => setIsMobileExpanded(!isMobileExpanded)}
+          className="bg-sidebar-accent hover:bg-sidebar-accent/80 text-sidebar-foreground ml-0 shrink-0 rounded-none p-1 transition-colors"
+        >
+          {isMobileExpanded ? <CaretLeft size={20} /> : <CaretRight size={20} />}
+        </button>
+      </div>
+    );
+  }
 
   return (
     <Sidebar collapsible="icon" className="border-sidebar-border pointer-events-auto border-r shadow-sm">

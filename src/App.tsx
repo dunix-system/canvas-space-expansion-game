@@ -1,7 +1,7 @@
 import { useState } from "react";
 import CanvasComponent from "./components/features/Canvas";
 import { AppSidebar } from "./components/features/AppSidebar";
-import { SidebarProvider } from "./components/ui/sidebar";
+import { SidebarProvider, SidebarTrigger } from "./components/ui/sidebar";
 import { PropertiesPanel } from "./components/features/PropertiesPanel";
 import { EffectsPanel } from "./components/features/EffectsPanel";
 
@@ -19,7 +19,7 @@ function App() {
       </div>
 
       <SidebarProvider className="pointer-events-none absolute inset-0 z-10 flex w-full">
-        <div className="pointer-events-auto flex h-full">
+        <div className="pointer-events-none relative flex h-full w-full">
           <AppSidebar activePanel={activePanel} setActivePanel={setActivePanel} />
 
           {activePanel === "properties" && (
