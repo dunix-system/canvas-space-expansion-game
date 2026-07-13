@@ -14,9 +14,10 @@ interface CanvasComponentProps {
   glowStrength: number;
   trailEnabled: boolean;
   inertiaEnabled: boolean;
+  joinMovementEnabled: boolean;
 }
 
-const CanvasComponent: React.FC<CanvasComponentProps> = ({ circleGap, circleRad, angle, glowEnabled, glowIntensity, glowStrength, trailEnabled, inertiaEnabled }) => {
+const CanvasComponent: React.FC<CanvasComponentProps> = ({ circleGap, circleRad, angle, glowEnabled, glowIntensity, glowStrength, trailEnabled, inertiaEnabled, joinMovementEnabled }) => {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const cameraRef = useRef<{ u: number; v: number }>({ u: 0, v: 0 });
   const startMouseRef = useRef<{ x: number; y: number }>({ x: 0, y: 0 });
@@ -27,11 +28,11 @@ const CanvasComponent: React.FC<CanvasComponentProps> = ({ circleGap, circleRad,
   const fadeCounterRef = useRef<number>(0);
   const prevCameraRef = useRef<{ u: number; v: number }>({ u: 0, v: 0 });
 
-  const propsRef = useRef({ circleRad, circleGap, angle, glowEnabled, glowIntensity, glowStrength, trailEnabled, inertiaEnabled });
+  const propsRef = useRef({ circleRad, circleGap, angle, glowEnabled, glowIntensity, glowStrength, trailEnabled, inertiaEnabled, joinMovementEnabled });
 
   useEffect(() => {
-    propsRef.current = { circleRad, circleGap, angle, glowEnabled, glowIntensity, glowStrength, trailEnabled, inertiaEnabled };
-  }, [circleRad, circleGap, angle, glowEnabled, glowIntensity, glowStrength, trailEnabled, inertiaEnabled]);
+    propsRef.current = { circleRad, circleGap, angle, glowEnabled, glowIntensity, glowStrength, trailEnabled, inertiaEnabled, joinMovementEnabled };
+  }, [circleRad, circleGap, angle, glowEnabled, glowIntensity, glowStrength, trailEnabled, inertiaEnabled, joinMovementEnabled]);
 
   const draw = useCallback(() => {
     const canvas = canvasRef.current;
@@ -59,8 +60,9 @@ const CanvasComponent: React.FC<CanvasComponentProps> = ({ circleGap, circleRad,
     const centerX = logicalWidth / 2;
     const centerY = logicalHeight / 2;
 
+    const isInertiaActive = Math.abs(velocityRef.current.u) > 0.0001 || Math.abs(velocityRef.current.v) > 0.0001;
     let doFade = false;
-    if (currentMouseRef.current) {
+    if (currentMouseRef.current || isInertiaActive) {
       fadeCounterRef.current = 40; // ~0.6 seconds fade out
       doFade = true;
     } else if (fadeCounterRef.current > 0) {
@@ -80,11 +82,11 @@ const CanvasComponent: React.FC<CanvasComponentProps> = ({ circleGap, circleRad,
     ctx.rotate(angleRad);
 
     const circleDiam = circleRad * 2;
-    // Calculate relative step based on disk size. 10 gap = 1 full disk width.
+    // Calculate relative step based on disk size. 20 gap = 1 full disk width.
     // Range [-7, 7] maps to 7 for performance and visual reasons.
     // Clamp to minimum of 5 to prevent infinite loops and freezing.
     const effectiveGap = Math.max(7, Math.abs(circleGap));
-    const step = Math.max(5, circleDiam * (effectiveGap / 10));
+    const step = Math.max(5, circleDiam * (effectiveGap / 20));
 
     const camWorldX = cameraRef.current.u * step;
     const camWorldY = cameraRef.current.v * step;
@@ -95,6 +97,7 @@ const CanvasComponent: React.FC<CanvasComponentProps> = ({ circleGap, circleRad,
     const dy = camWorldY - prevCamWorldY;
     
     const isMoving = Math.abs(dx) > 0.1 || Math.abs(dy) > 0.1;
+    const shouldDrawLines = isMoving && propsRef.current.joinMovementEnabled;
 
     ctx.translate(-camWorldX, -camWorldY);
 
@@ -109,7 +112,7 @@ const CanvasComponent: React.FC<CanvasComponentProps> = ({ circleGap, circleRad,
       for (let colNum = startCol; colNum <= endCol; colNum += 1) {
         const cx = step * colNum;
         const cy = step * rowNum;
-        if (isMoving) {
+        if (shouldDrawLines) {
           ctx.moveTo(cx + dx, cy + dy);
           ctx.lineTo(cx, cy);
         } else {
@@ -119,7 +122,7 @@ const CanvasComponent: React.FC<CanvasComponentProps> = ({ circleGap, circleRad,
       }
     }
 
-    if (isMoving) {
+    if (shouldDrawLines) {
       ctx.lineWidth = circleRad * 2;
       ctx.lineCap = "round";
       ctx.strokeStyle = CIRCLE_COLOR;
@@ -133,7 +136,7 @@ const CanvasComponent: React.FC<CanvasComponentProps> = ({ circleGap, circleRad,
       
       for (let i = glowStrength; i > 0; i--) {
         ctx.shadowBlur = (glowIntensity / glowStrength) * i;
-        if (isMoving) {
+        if (shouldDrawLines) {
           ctx.stroke();
         } else {
           ctx.fill();
@@ -144,7 +147,7 @@ const CanvasComponent: React.FC<CanvasComponentProps> = ({ circleGap, circleRad,
     } else {
       ctx.shadowBlur = 0;
       ctx.shadowColor = "transparent";
-      if (isMoving) {
+      if (shouldDrawLines) {
         ctx.stroke();
       } else {
         ctx.fill();
@@ -174,7 +177,7 @@ const CanvasComponent: React.FC<CanvasComponentProps> = ({ circleGap, circleRad,
 
         const circleDiam = circleRad * 2;
         const effectiveGap = Math.max(7, Math.abs(circleGap));
-        const step = Math.max(5, circleDiam * (effectiveGap / 10));
+        const step = Math.max(5, circleDiam * (effectiveGap / 20));
 
         const du = (worldDx * SPEED_FACTOR) / step;
         const dv = (worldDy * SPEED_FACTOR) / step;
@@ -202,7 +205,7 @@ const CanvasComponent: React.FC<CanvasComponentProps> = ({ circleGap, circleRad,
           const { angle, circleRad, circleGap } = propsRef.current;
           const circleDiam = circleRad * 2;
           const effectiveGap = Math.max(7, Math.abs(circleGap));
-          const step = Math.max(5, circleDiam * (effectiveGap / 10));
+          const step = Math.max(5, circleDiam * (effectiveGap / 20));
           
           const angleRad = (angle * Math.PI) / 180;
           const cosA = Math.cos(angleRad);

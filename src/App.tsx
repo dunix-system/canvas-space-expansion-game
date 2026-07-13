@@ -9,29 +9,31 @@ export type ActivePanel = "properties" | "effects" | null;
 
 function App() {
   const [circleRad, setCircleRad] = useState(42);
-  const [circleGap, setCircleGap] = useState(12);
+  const [circleGap, setCircleGap] = useState(24);
   const [angle, setAngle] = useState(30);
-  
+
   const [glowEnabled, setGlowEnabled] = useState(false);
   const [glowIntensity, setGlowIntensity] = useState(15);
   const [glowStrength, setGlowStrength] = useState(1);
   const [trailEnabled, setTrailEnabled] = useState(false);
   const [inertiaEnabled, setInertiaEnabled] = useState(true);
-  
+  const [joinMovementEnabled, setJoinMovementEnabled] = useState(true);
+
   const [activePanel, setActivePanel] = useState<ActivePanel>(null);
 
   return (
     <div className="bg-background relative h-screen w-screen overflow-hidden">
       <div className="absolute inset-0 z-0">
-        <CanvasComponent 
-          circleRad={circleRad} 
-          circleGap={circleGap} 
-          angle={angle} 
+        <CanvasComponent
+          circleRad={circleRad}
+          circleGap={circleGap}
+          angle={angle}
           glowEnabled={glowEnabled}
           glowIntensity={glowIntensity}
           glowStrength={glowStrength}
           trailEnabled={trailEnabled}
           inertiaEnabled={inertiaEnabled}
+          joinMovementEnabled={joinMovementEnabled}
         />
       </div>
 
@@ -52,7 +54,7 @@ function App() {
           )}
 
           {activePanel === "effects" && (
-            <EffectsPanel 
+            <EffectsPanel
               glowEnabled={glowEnabled}
               setGlowEnabled={setGlowEnabled}
               glowIntensity={glowIntensity}
@@ -63,7 +65,9 @@ function App() {
               setTrailEnabled={setTrailEnabled}
               inertiaEnabled={inertiaEnabled}
               setInertiaEnabled={setInertiaEnabled}
-              onClose={() => setActivePanel(null)} 
+              joinMovementEnabled={joinMovementEnabled}
+              setJoinMovementEnabled={setJoinMovementEnabled}
+              onClose={() => setActivePanel(null)}
             />
           )}
         </div>
