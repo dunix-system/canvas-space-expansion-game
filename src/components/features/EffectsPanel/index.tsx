@@ -14,22 +14,30 @@ interface EffectsPanelProps {
   setGlowStrength: Dispatch<SetStateAction<number>>;
   trailEnabled: boolean;
   setTrailEnabled: Dispatch<SetStateAction<boolean>>;
+  inertiaEnabled: boolean;
+  setInertiaEnabled: Dispatch<SetStateAction<boolean>>;
+  joinMovementEnabled: boolean;
+  setJoinMovementEnabled: Dispatch<SetStateAction<boolean>>;
   onClose: () => void;
 }
 
-export const EffectsPanel = ({ 
-  glowEnabled, 
-  setGlowEnabled, 
-  glowIntensity, 
-  setGlowIntensity, 
+export const EffectsPanel = ({
+  glowEnabled,
+  setGlowEnabled,
+  glowIntensity,
+  setGlowIntensity,
   glowStrength,
   setGlowStrength,
   trailEnabled,
   setTrailEnabled,
-  onClose 
+  inertiaEnabled,
+  setInertiaEnabled,
+  joinMovementEnabled,
+  setJoinMovementEnabled,
+  onClose,
 }: EffectsPanelProps) => {
   return (
-    <div className="bg-sidebar/95 sm:bg-sidebar border-sidebar-border pointer-events-auto absolute top-20 left-1/2 z-50 flex max-h-[70vh] w-[90vw] -translate-x-1/2 flex-col rounded-none border shadow-2xl backdrop-blur-md sm:relative sm:top-auto sm:left-auto sm:z-auto sm:m-2 sm:mt-3 sm:h-fit sm:max-h-full sm:w-90 sm:-translate-x-0 sm:-translate-y-0 sm:border-0 sm:border-r sm:shadow-xl">
+    <div className="bg-sidebar/95 sm:bg-sidebar border-sidebar-border pointer-events-auto absolute top-20 left-1/2 z-50 flex max-h-[70vh] w-[90vw] -translate-x-1/2 flex-col rounded-none border shadow-2xl backdrop-blur-md sm:relative sm:top-auto sm:left-auto sm:z-auto sm:m-2 sm:mt-2 sm:h-fit sm:max-h-full sm:w-90 sm:-translate-x-0 sm:-translate-y-0 sm:border-0 sm:border-r sm:shadow-xl">
       <div className="border-sidebar-border flex items-center justify-between border-b p-4">
         <h2 className="text-sidebar-foreground text-lg font-semibold tracking-tight">Effects</h2>
         <Button
@@ -45,17 +53,21 @@ export const EffectsPanel = ({
         <FieldGroup className="gap-8">
           <Field className="gap-4">
             <div className="flex items-center space-x-2">
-              <Checkbox 
-                id="glowEnabled" 
-                checked={glowEnabled} 
-                onCheckedChange={(checked) => setGlowEnabled(!!checked)} 
+              <Checkbox
+                id="glowEnabled"
+                checked={glowEnabled}
+                onCheckedChange={(checked) => setGlowEnabled(!!checked)}
               />
-              <FieldLabel htmlFor="glowEnabled" className="cursor-pointer text-base">Enable Glow Effect</FieldLabel>
+              <FieldLabel htmlFor="glowEnabled" className="cursor-pointer text-base">
+                Enable Glow Effect
+              </FieldLabel>
             </div>
             {glowEnabled && (
-              <div className="mt-2 flex flex-col gap-4 pl-6 border-l-2 border-border/50">
+              <div className="border-border/50 mt-2 flex flex-col gap-4 border-l-2 pl-6">
                 <div className="flex items-center justify-between">
-                  <FieldLabel htmlFor="glowIntensity" className="text-sm">Glow Intensity</FieldLabel>
+                  <FieldLabel htmlFor="glowIntensity" className="text-sm">
+                    Glow Intensity
+                  </FieldLabel>
                   <span className="text-muted-foreground text-sm font-medium">{glowIntensity}</span>
                 </div>
                 <Slider
@@ -66,8 +78,10 @@ export const EffectsPanel = ({
                   step={1}
                   onValueChange={(val) => setGlowIntensity(val[0])}
                 />
-                <div className="flex items-center justify-between mt-4">
-                  <FieldLabel htmlFor="glowStrength" className="text-sm">Glow Strength</FieldLabel>
+                <div className="mt-4 flex items-center justify-between">
+                  <FieldLabel htmlFor="glowStrength" className="text-sm">
+                    Glow Strength
+                  </FieldLabel>
                   <span className="text-muted-foreground text-sm font-medium">{glowStrength}</span>
                 </div>
                 <Slider
@@ -83,12 +97,38 @@ export const EffectsPanel = ({
           </Field>
           <Field className="gap-4">
             <div className="flex items-center space-x-2">
-              <Checkbox 
-                id="trailEnabled" 
-                checked={trailEnabled} 
-                onCheckedChange={(checked) => setTrailEnabled(!!checked)} 
+              <Checkbox
+                id="trailEnabled"
+                checked={trailEnabled}
+                onCheckedChange={(checked) => setTrailEnabled(!!checked)}
               />
-              <FieldLabel htmlFor="trailEnabled" className="cursor-pointer text-base">Enable Motion Blur (Trail)</FieldLabel>
+              <FieldLabel htmlFor="trailEnabled" className="cursor-pointer text-base">
+                Enable Motion Blur (Trail)
+              </FieldLabel>
+            </div>
+          </Field>
+          <Field className="gap-4">
+            <div className="flex items-center space-x-2">
+              <Checkbox
+                id="inertiaEnabled"
+                checked={inertiaEnabled}
+                onCheckedChange={(checked) => setInertiaEnabled(!!checked)}
+              />
+              <FieldLabel htmlFor="inertiaEnabled" className="cursor-pointer text-base">
+                Enable Smooth Stop
+              </FieldLabel>
+            </div>
+          </Field>
+          <Field className="gap-4">
+            <div className="flex items-center space-x-2">
+              <Checkbox
+                id="joinMovementEnabled"
+                checked={joinMovementEnabled}
+                onCheckedChange={(checked) => setJoinMovementEnabled(!!checked)}
+              />
+              <FieldLabel htmlFor="joinMovementEnabled" className="cursor-pointer text-base">
+                Enable Join Movement Line
+              </FieldLabel>
             </div>
           </Field>
         </FieldGroup>

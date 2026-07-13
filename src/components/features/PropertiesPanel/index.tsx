@@ -26,7 +26,7 @@ export const PropertiesPanel = ({
   onClose,
 }: PropertiesPanelProps) => {
   return (
-    <div className="bg-sidebar/95 sm:bg-sidebar border-sidebar-border pointer-events-auto absolute top-20 left-1/2 z-50 flex max-h-[70vh] w-[90vw] -translate-x-1/2 flex-col rounded-none border shadow-2xl backdrop-blur-md sm:relative sm:top-auto sm:left-auto sm:z-auto sm:m-2 sm:mt-3 sm:h-fit sm:max-h-full sm:w-90 sm:-translate-x-0 sm:-translate-y-0 sm:border-0 sm:border-r sm:shadow-xl">
+    <div className="bg-sidebar/95 sm:bg-sidebar border-sidebar-border pointer-events-auto absolute top-20 left-1/2 z-50 flex max-h-[70vh] w-[90vw] -translate-x-1/2 flex-col rounded-none border shadow-2xl backdrop-blur-md sm:relative sm:top-auto sm:left-auto sm:z-auto sm:m-2 sm:mt-2 sm:h-fit sm:max-h-full sm:w-90 sm:-translate-x-0 sm:-translate-y-0 sm:border-0 sm:border-r sm:shadow-xl">
       <div className="border-sidebar-border flex items-center justify-between border-b p-4">
         <h2 className="text-sidebar-foreground text-lg font-semibold tracking-tight">Properties</h2>
         <Button
@@ -67,8 +67,8 @@ export const PropertiesPanel = ({
                 id="circleGap"
                 value={circleGap}
                 onValueChange={setCircleGap}
-                min={-800}
-                max={800}
+                min={-200}
+                max={200}
                 className="h-auto w-32 [appearance:textfield] border-transparent bg-transparent! pr-3 pl-3 text-right text-4xl! font-bold tracking-tighter shadow-none focus-visible:border-transparent focus-visible:ring-0 [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
               />
             </div>
@@ -77,15 +77,15 @@ export const PropertiesPanel = ({
 
               <Slider
                 value={[circleGap]}
-                max={800}
-                min={-800}
+                max={200}
+                min={-200}
                 step={1}
                 onValueChange={(val) => setCircleGap(val[0])}
               />
             </div>
           </Field>
-          <Field className="gap-2 flex flex-col items-center">
-            <div className="flex items-baseline justify-between gap-8 w-full">
+          <Field className="flex flex-col items-center gap-2">
+            <div className="flex w-full items-baseline justify-between gap-8">
               <FieldLabel htmlFor="angle">Rotation angle</FieldLabel>
               <div className="relative flex items-center">
                 <ScrubbableInput
@@ -96,10 +96,12 @@ export const PropertiesPanel = ({
                   max={360}
                   className="h-auto w-32 [appearance:textfield] border-transparent bg-transparent! pr-6 pl-3 text-right text-4xl! font-bold tracking-tighter shadow-none focus-visible:border-transparent focus-visible:ring-0 [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
                 />
-                <span className="absolute right-0 top-1/2 -translate-y-1/2 text-4xl font-bold opacity-70 pointer-events-none">°</span>
+                <span className="pointer-events-none absolute top-1/2 right-0 -translate-y-1/2 text-4xl font-bold opacity-70">
+                  °
+                </span>
               </div>
             </div>
-            <div className="flex justify-center w-full">
+            <div className="flex w-full justify-center">
               <Knob value={angle} onValueChange={setAngle} />
             </div>
           </Field>
